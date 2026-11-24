@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Variant to'lov</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #fff); --text: var(--tg-theme-text-color, #111);
+    --hint: var(--tg-theme-hint-color, #8a8a8f); --card: var(--tg-theme-secondary-bg-color, #f2f2f6);
+    --btn: var(--tg-theme-button-color, #2481cc); --btntext: var(--tg-theme-button-text-color, #fff);
+    --green: #1fb86a; --red: #f0455a; --amber: #f59e0b;
+    --g-main: linear-gradient(135deg, #6a5cff 0%, #2f9bff 100%);
+    --g-green: linear-gradient(90deg, #1fb86a, #5be0a0);
+    --g-warm: linear-gradient(135deg, #ff7a59, #ff4f8b);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; padding: 16px 16px 90px; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, sans-serif; font-size: 15px; }
+  h2 { margin: 0 0 4px; font-size: 20px; }
+  .muted { color: var(--hint); font-size: 13px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .icons { display: flex; gap: 6px; }
+  .icons button { border: 0; background: var(--card); color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .summary { background: var(--g-main); color: #fff; border-radius: 20px; padding: 18px; margin-bottom: 12px;
+    box-shadow: 0 8px 22px rgba(79,110,255,.35); position: relative; overflow: hidden; }
+  .summary::after { content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%;
+    background: rgba(255,255,255,.14); }
+  .summary .muted { color: rgba(255,255,255,.8); }
+  .summary .big { font-size: 32px; font-weight: 800; margin: 2px 0 12px; letter-spacing: -.5px; }
+  .summary .grid > div { background: rgba(255,255,255,.18); border-radius: 12px; padding: 8px 10px; }
+  .summary .grid b { color: #fff !important; }
+  .summary .bar { background: rgba(255,255,255,.28); }
+  .summary .bar i { background: #fff; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid b { display: block; font-size: 16px; }
+  .bar { height: 8px; background: rgba(128,128,128,.22); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .bar i { display: block; height: 100%; background: var(--g-green); border-radius: 4px; }
+  .tabs { display: flex; gap: 6px; margin: 14px 0 10px; }
+  .tabs button { flex: 1; padding: 10px 4px; border: 0; border-radius: 12px; background: var(--card); color: var(--text); font-size: 14px; font-weight: 500; }
+  .tabs button.on { background: var(--g-main); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(79,110,255,.35); }
+  .card { background: var(--card); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; cursor: pointer;
+    border-left: 5px solid var(--green); display: flex; gap: 12px; align-items: flex-start; transition: transform .1s; }
+  .card:active { transform: scale(.98); }
+  .card.late { border-left-color: var(--red); background: linear-gradient(90deg, rgba(240,69,90,.10), var(--card) 60%); }
+  .card.done { border-left-color: #8a8a8f; opacity: .85; }
+  .card .body { flex: 1; min-width: 0; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 16px; display: flex;
+    align-items: center; justify-content: center; flex: none; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .card .name { font-weight: 700; font-size: 16px; }
+  .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--hint); margin-top: 6px; gap: 8px; }
+  .row b { color: var(--text); }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+  .b-red { background: rgba(240,69,90,.16); color: var(--red); }
+  .b-green { background: rgba(31,184,106,.16); color: var(--green); }
+  .empty { text-align: center; color: var(--hint); padding: 40px 10px; }
+  .fab { position: fixed; right: 16px; bottom: 16px; padding: 15px 22px; border: 0; border-radius: 30px; background: var(--g-warm);
+    color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 8px 20px rgba(255,79,139,.45); }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; z-index: 10; }
+  .overlay.show { display: flex; }
+  .sheet { background: var(--bg); width: 100%; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; }
+  .sheet .head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px; }
+  .x { border: 0; background: var(--card); color: var(--text); width: 32px; height: 32px; border-radius: 50%; font-size: 16px; flex: none; }
+  input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid transparent; background: var(--card);
+    color: var(--text); font-size: 16px; font-family: inherit; }
+  textarea { min-height: 110px; resize: vertical; }
+  label { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--hint); }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .two > *, input, select { min-width: 0; }
+  input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 46px; padding: 12px 8px; }
+  .btn { width: 100%; padding: 14px; border: 0; border-radius: 14px; background: var(--g-main); color: #fff; font-size: 16px; font-weight: 700; margin-top: 12px;
+    box-shadow: 0 6px 16px rgba(79,110,255,.35); }
+  .btn.sec { background: var(--card); color: var(--text); font-weight: 500; margin-top: 8px; box-shadow: none; }
+  .btn.danger { color: var(--red); }
+  .chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .chip { padding: 7px 12px; border-radius: 20px; background: var(--card); border: 0; color: var(--text); font-size: 13px; }
+  .stat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+  .stat div { background: var(--card); border-radius: 14px; padding: 10px 12px; border-top: 3px solid rgba(106,92,255,.5); }
+  .stat div:nth-child(2) { border-top-color: var(--red); } .stat div:nth-child(3) { border-top-color: var(--green); }
+  .stat div:nth-child(4) { border-top-color: var(--amber); } .stat div:nth-child(5) { border-top-color: #2f9bff; }
+  .stat div:nth-child(6) { border-top-color: #ff4f8b; }
+  .stat b { display: block; font-size: 16px; margin-top: 2px; }
+  .line { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--card); gap: 8px; }
+  .line button { border: 0; background: none; color: var(--hint); font-size: 16px; padding: 4px 8px; }
+  .st { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .st.paid { color: var(--green); } .st.late { color: var(--red); } .st.partial { color: var(--amber); } .st.pending { color: var(--hint); }
+  .note { background: var(--card); border-radius: 10px; padding: 8px 10px; margin-top: 6px; font-size: 14px; white-space: pre-wrap; }
+  h4 { margin: 18px 0 4px; }
+  a.tel { color: var(--btn); text-decoration: none; }
+  button { cursor: pointer; touch-action: manipulation; }
+  button.busy { opacity: .6; pointer-events: none; }
+  .presets { display: none; margin: 8px 0 4px; }
+  .presets.show { display: block; }
+  .preset { display: block; width: 100%; text-align: left; border: 0; background: var(--card); color: var(--text); border-radius: 12px;
+    padding: 9px 12px; margin-bottom: 6px; font-size: 13px; line-height: 1.35; }
+  .preset b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .vars { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .vars button { border: 0; border-radius: 8px; padding: 5px 8px; background: var(--card); color: var(--btn); font-size: 12px; }
+  .pcard { background: var(--card); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .pcard .num { font-size: 17px; font-weight: 700; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+  .pcard button { border: 0; background: var(--g-main); color: #fff; border-radius: 10px; padding: 8px 12px; font-size: 13px; flex: none; }
+  .pcard button.del { background: none; color: var(--red); font-size: 18px; padding: 4px 8px; }
+</style>
+</head>
+<body>
+<div id="app"><div class="empty">Yuklanmoqda…</div></div>
+<div class="muted" style="text-align:center;margin-top:28px"><a class="tel" href="/privacy.html">Maxfiylik</a> · <a class="tel" href="/terms.html">Shartlar</a></div>
+<button class="fab" id="fab" hidden>＋ Mijoz qo'shish</button>
+<div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
+
+<script>
+const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n, cur = "USD") => { const s = Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return cur === "USD" ? `$${s}` : cur === "EUR" ? `€${s}` : cur === "TRY" ? `₺${s}` : `${s} so'm`; };
+const fdate = (s) => s ? s.split("-").reverse().join(".") : "";
+const fiso = (iso) => new Date(iso).toLocaleDateString("ru-RU", { timeZone: "Europe/Istanbul" });
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date());
+// Telegram oynalari eski versiyalarda ishlamasligi yoki boshqa oyna ochiq bo'lsa xato berishi mumkin: shunda oddiy brauzer oynasi
+const alertMsg = (m) => { try { tg.showAlert(m); } catch { alert(m); } };
+const confirmMsg = (m) => new Promise((r) => { try { tg.showConfirm(m, (ok) => r(!!ok)); } catch { r(confirm(m)); } });
+const haptic = (t) => { try { tg.HapticFeedback?.notificationOccurred(t); } catch {} };
+const ST = { paid: "✅ To'landi", late: "⚠️ Kechikdi", partial: "🟡 Qisman", pending: "🕒 Kutilmoqda" };
+
+let data = { role: "", debtors: [] }, tab = "all", openId = null;
+
+async function api(path, method = "GET", body) {
+  if (data.demo && path !== "/debtors") {
+    const e = new Error("Bu namuna rejim: o'zgarishlar saqlanmaydi. To'liq ishlatish uchun egasi sizga ruxsat berishi kerak.");
+    e.demo = true; throw e;
+  }
+  const r = await fetch("/api" + path, { method, headers: { "Content-Type": "application/json", "x-init-data": tg.initData },
+    body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) { const e = new Error("Sessiya eskirdi. Panelni yopib, qaytadan oching."); e.status = 401; throw e; }
+  if (!r.ok) { const e = new Error(j.error || "Xatolik"); e.status = r.status; throw e; }
+  return j;
+}
+
+async function load() {
+  try { data = await api("/debtors"); render(); if (openId) showDetail(openId); }
+  catch (e) {
+    $("fab").hidden = true;
+    $("app").innerHTML = `<div class="empty"><h2>${e.status === 403 ? "⛔ Ruxsat yo'q" : "Kirib bo'lmadi"}</h2>${esc(e.message)}</div>`;
+  }
+}
+
+const isOwner = () => data.role === "owner";
+
+// ---------- ro'yxat ----------
+function render() {
+  $("fab").hidden = !isOwner();
+  if (!isOwner()) return renderCustomer();
+
+  const by = {};
+  for (const d of data.debtors) {
+    const s = (by[d.currency] ??= { total: 0, paid: 0, rem: 0, over: 0, profit: 0 });
+    s.total += d.total; s.paid += d.c.paid; s.rem += d.c.remaining; s.over += d.c.overdue;
+    if (d.buyPrice != null) s.profit += d.total - d.buyPrice;
+  }
+  const sums = Object.entries(by).map(([cur, s]) => `
+    <div class="summary">
+      <div class="muted">Qolgan qarz (sizga to'lanishi kerak)</div>
+      <div class="big">${fmt(s.rem, cur)}</div>
+      <div class="grid">
+        <div><span class="muted">Yig'ilgan</span><b style="color:var(--green)">${fmt(s.paid, cur)}</b></div>
+        <div><span class="muted">Kechikkan</span><b style="color:${s.over ? "var(--red)" : "inherit"}">${fmt(s.over, cur)}</b></div>
+      </div>
+      ${s.profit ? `<div class="muted" style="margin-top:8px">Jami foyda: ${fmt(s.profit, cur)}</div>` : ""}
+      <div class="bar"><i style="width:${s.total ? Math.round((s.paid / s.total) * 100) : 0}%"></i></div>
+    </div>`).join("");
+
+  const list = data.debtors.filter((d) => tab === "all" ? !d.c.done : tab === "late" ? d.c.overdue > 0 : d.c.done)
+    .sort((a, b) => b.c.overdue - a.c.overdue || b.c.remaining - a.c.remaining);
+
+  $("app").innerHTML = `
+    ${data.demo ? `<div class="summary" style="border:1px dashed var(--green)"><b>👀 Namuna rejim</b><div class="muted">Bu yerdagi mijozlar soxta. Panel qanday ishlashini ko'rishingiz mumkin, lekin o'zgarishlar saqlanmaydi.</div></div>` : ""}
+    <div class="top"><div><h2>💼 Qarz nazorati</h2><div class="muted">${data.debtors.length} ta mijoz</div></div>
+      <div class="icons"><button data-act="excel">📥 Excel</button><button data-act="tpl">✉️ Matn</button><button data-act="cards">💳 Karta</button></div></div>
+    <div style="margin-top:12px">${sums}</div>
+    <div class="tabs">${[["all", "Faol"], ["late", "Kechikkan"], ["done", "Tugagan"]].map(([k, v]) => `<button data-tab="${k}" class="${tab === k ? "on" : ""}">${v}</button>`).join("")}</div>
+    ${list.map(card).join("") || '<div class="empty">Bu ro\'yxatda hech kim yo\'q</div>'}`;
+}
+
+function card(d) {
+  const c = d.c;
+  const badge = c.done ? '<span class="badge b-green">Tugagan</span>'
+    : c.overdue > 0 ? `<span class="badge b-red">Kechikdi ${fmt(c.overdue, d.currency)}</span>` : '<span class="badge b-green">Vaqtida</span>';
+  return `<div class="card ${c.done ? "done" : c.overdue > 0 ? "late" : ""}" data-id="${esc(d.id)}">
+    <div class="avatar" style="background:${avatarBg(d.name)}">${esc(initials(d.name))}</div>
+    <div class="body">
+      <div class="top"><span class="name">${esc(d.name)}</span>${badge}</div>
+      ${d.product ? `<div class="muted">📦 ${esc(d.product)}${d.qty > 1 ? " × " + d.qty : ""}</div>` : ""}
+      <div class="row"><span>📆 Oylar <b>${c.paidMonths}/${d.months}</b></span><span>💳 Qolgan <b>${fmt(c.remaining, d.currency)}</b></span></div>
+      <div class="bar"><i style="width:${c.percent}%"></i></div>
+      ${c.done ? "" : `<div class="row"><span>⏰ ${fdate(c.nextDue)}</span><span>💸 ${fmt(d.monthly, d.currency)}/oy</span></div>`}
+    </div>
+  </div>`;
+}
+
+// Ismga qarab doimiy rangli avatar
+const initials = (n) => n.replace(/^@/, "").split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+const PAL = [["#6a5cff", "#2f9bff"], ["#ff7a59", "#ff4f8b"], ["#1fb86a", "#2fd1c5"], ["#f59e0b", "#ff7a59"], ["#a855f7", "#ec4899"], ["#06b6d4", "#3b82f6"]];
+const avatarBg = (n) => { let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const [a, b] = PAL[h % PAL.length]; return `linear-gradient(135deg, ${a}, ${b})`; };
+
+// ---------- mijoz ko'rinishi (faqat o'zining ma'lumoti) ----------
+function renderCustomer() {
+  $("app").innerHTML = `<h2>Mening to'lovlarim</h2>` + data.debtors.map((d) => {
+    const c = d.c;
+    return `<div class="summary" style="margin-top:12px">
+      <div class="name" style="font-weight:600;font-size:17px">${esc(d.product || d.name)}${d.qty > 1 ? " × " + d.qty : ""}</div>
+      <div class="muted">Sotilgan: ${fdate(d.saleDate)} · ${d.months} oy × ${fmt(d.monthly, d.currency)}</div>
+      <div class="muted" style="margin-top:10px">Qolgan qarz</div>
+      <div class="big">${fmt(c.remaining, d.currency)}</div>
+      <div class="grid"><div><span class="muted">To'langan</span><b style="color:var(--green)">${fmt(c.paid, d.currency)}</b></div>
+        <div><span class="muted">Oylar</span><b>${c.paidMonths}/${d.months}</b></div></div>
+      <div class="bar"><i style="width:${c.percent}%"></i></div>
+      ${c.overdue > 0 ? `<div style="background:rgba(255,255,255,.9);color:var(--red);margin-top:10px;padding:6px 10px;border-radius:10px"><b>⚠️ Kechikkan: ${fmt(c.overdue, d.currency)}</b></div>` : ""}
+    </div>
+    ${c.done ? "" : `<h4>💳 To'lov qilish</h4>
+      <div class="muted">Hozir to'lanadigan summa: <b>${fmt(c.dueNow, d.currency)}</b>${c.nextDue ? ` · sana: ${fdate(c.nextDue)}` : ""}</div>
+      <div style="margin-top:8px">${(data.cards || []).map((k) => `<div class="pcard"><div><div class="muted">${esc(k.bank || "Karta")}</div>
+        <div class="num">${fcard(k.number)}</div>${k.holder ? `<div class="muted">${esc(k.holder)}</div>` : ""}</div>
+        <button data-copy="${esc(k.number)}">Nusxa olish</button></div>`).join("") || '<div class="muted">Karta ma\'lumoti hali kiritilmagan. Sotuvchiga murojaat qiling.</div>'}</div>
+      ${(data.cards || []).length ? `<div class="muted">O'tkazganingizdan keyin botdagi <b>✅ To'lov qildim</b> tugmasini bosing yoki pastda yozib qoldiring.</div>` : ""}`}
+    <h4>To'lovlar jadvali</h4>${scheduleHtml(d)}
+    <h4>To'langan to'lovlar</h4>
+    ${d.payments.map((p) => `<div class="line"><div><b>${fmt(p.amount, d.currency)}</b></div><div class="muted">${fiso(p.date)}</div></div>`).join("") || '<div class="muted">Hali to\'lov yo\'q</div>'}
+    <h4>Egasiga xabar / izoh</h4>
+    <div class="muted">To'lay olmasangiz, sababini yozing.</div>
+    <textarea id="exc-${esc(d.id)}" placeholder="Masalan: Shu hafta to'lay olmayman, 25-ga to'layman"></textarea>
+    <button class="btn" data-excuse="${esc(d.id)}">Yuborish</button>
+    ${d.excuses.map((x) => `<div class="note"><span class="muted">${fiso(x.date)}</span><br>${esc(x.text)}</div>`).join("")}`;
+  }).join("");
+}
+
+const deltaText = (n) => (n === 0 ? "vaqtida" : n > 0 ? `${n} kun kech` : `${-n} kun oldin`);
+
+// To'lovlar jadvali: har oy uchun to'lash sanasi va haqiqatda to'langan sana. editable=true bo'lsa egasi bosib o'zgartira oladi
+function scheduleHtml(d, editable = false) {
+  return d.c.rows.map((r) => {
+    const moved = r.n > 0 && d.overrides && d.overrides[r.n];
+    const paid = r.paidOn
+      ? `<div class="muted">✅ To'langan: <b>${fdate(r.paidOn)}</b> · ${deltaText(r.delta)}</div>`
+      : r.status === "partial" ? `<div class="muted">🟡 ${fmt(r.paidAmt, d.currency)} to'langan</div>` : "";
+    return `<div class="line" ${editable && r.n > 0 ? `data-row="${r.n}" style="cursor:pointer"` : ""}>
+      <div><b>${r.n === 0 ? "Oldindan" : r.n + "-oy"}</b> · to'lash kerak: <b>${fdate(r.due)}</b>${moved ? " ✏️" : ""}
+        <div class="muted">${fmt(r.amount, d.currency)}</div>${paid}</div>
+      <span class="st ${r.status}">${ST[r.status]}</span></div>`;
+  }).join("");
+}
+
+// ---------- oynalar ----------
+function sheet(html) { $("sheet").innerHTML = html; $("ov").classList.add("show"); }
+function closeSheet() { openId = null; $("ov").classList.remove("show"); }
+
+function showDetail(id) {
+  const d = data.debtors.find((x) => x.id === id);
+  if (!d) return closeSheet();
+  openId = id;
+  const c = d.c;
+  sheet(`
+    <div class="head"><div><h2>${esc(d.name)}</h2>
+      <div class="muted">${d.product ? esc(d.product) + (d.qty > 1 ? " × " + d.qty : "") + " · " : ""}Sotilgan ${fdate(d.saleDate)}</div>
+      ${d.phone ? `<div class="muted"><a class="tel" href="tel:${esc(d.phone)}">${esc(d.phone)}</a></div>` : ""}
+      ${d.code ? `<div class="muted">ID: ${esc(d.code)}</div>` : ""}</div>
+      <button class="x" data-act="close">✕</button></div>
+    ${d.note ? `<div class="note">📝 ${esc(d.note)}</div>` : ""}
+    <div class="bar"><i style="width:${c.percent}%"></i></div>
+    <div class="stat">
+      <div><span class="muted">Oylar</span><b>${c.paidMonths}/${d.months} to'langan</b><span class="muted">${c.remMonths} oy qoldi${c.partial ? ` (+${fmt(c.partial, d.currency)})` : ""}</span></div>
+      <div><span class="muted">Qolgan qarz</span><b>${fmt(c.remaining, d.currency)}</b></div>
+      <div><span class="muted">To'langan</span><b style="color:var(--green)">${fmt(c.paid, d.currency)}</b></div>
+      <div><span class="muted">${c.done ? "Holat" : "Keyingi to'lov"}</span><b style="color:${c.overdue ? "var(--red)" : "inherit"}">${c.done ? "Tugagan 🎉" : fdate(c.nextDue)}</b>
+        ${c.overdue ? `<span class="muted" style="color:var(--red)">Kechikkan ${fmt(c.overdue, d.currency)}</span>` : ""}</div>
+      <div><span class="muted">Oylik to'lov</span><b>${fmt(d.monthly, d.currency)}</b></div>
+      <div><span class="muted">Jami</span><b>${fmt(d.total, d.currency)}</b>${d.buyPrice != null ? `<span class="muted">Foyda ${fmt(d.total - d.buyPrice, d.currency)}</span>` : ""}</div>
+    </div>
+    ${c.done ? "" : `
+    <label>To'lov qabul qilish (${esc(d.currency)})</label>
+    <div class="two"><input id="payAmt" type="text" inputmode="text" autocomplete="off" placeholder="${d.monthly}">
+      <input id="payDate" type="date" value="${today()}" max="${today()}"></div>
+    <div class="chips">
+      <button class="chip" data-fill="${Math.min(d.monthly, c.remaining)}">1 oylik (${fmt(Math.min(d.monthly, c.remaining), d.currency)})</button>
+      <button class="chip" data-fill="${c.remaining}">Hammasi</button>
+    </div>
+    <button class="btn" data-act="pay">To'lovni saqlash</button>
+    <button class="btn sec" data-act="msg">✉️ Qarz haqida xabar yuborish</button>`}
+    <button class="btn sec" data-act="invite">🔗 Havolani yuborish ${d.linked ? "(ulangan ✅)" : "(hali ulanmagan)"}</button>
+    ${d.linked ? '<button class="btn sec" data-act="relink">♻️ Havolani yangilash (eski ulanishni uzadi)</button>' : ""}
+    <h4>To'lovlar jadvali</h4><div class="muted">Oyni bossangiz, to'lash sanasini o'zgartira olasiz.</div>${scheduleHtml(d, true)}
+    <h4>To'lov tarixi</h4><div class="muted">To'lovni bossangiz, summa yoki sanani tuzatish mumkin.</div>
+    ${d.payments.map((p) => `<div class="line" data-pay="${esc(p.id)}" style="cursor:pointer"><div><b>${fmt(p.amount, d.currency)}</b><div class="muted">${fiso(p.date)}${p.note ? " · " + esc(p.note) : ""} ✏️</div></div>
+      <button data-undo="${esc(p.id)}" title="Bekor qilish">↩️</button></div>`).join("") || '<div class="muted">Hali to\'lov yo\'q</div>'}
+    ${d.excuses.length ? `<h4>Mijoz yozganlari</h4>${d.excuses.map((x) => `<div class="note"><span class="muted">${fiso(x.date)}</span><br>${esc(x.text)}</div>`).join("")}` : ""}
+    ${d.messages.length ? `<h4>Yuborilgan xabarlar</h4>${d.messages.map((m) => `<div class="line"><div class="muted">${fiso(m.date)} · ${m.via === "dm" ? "shaxsiy chat" : "guruh"}</div></div>`).join("")}` : ""}
+    <button class="btn sec danger" data-act="del" style="margin-top:20px">🗑 Mijozni o'chirish</button>`);
+}
+
+function showMsg() {
+  const d = data.debtors.find((x) => x.id === openId);
+  sheet(`
+    <div class="head"><h2>Xabar: ${esc(d.name)}</h2><button class="x" data-act="back">✕</button></div>
+    <div class="muted">Matnni xohlaganingizcha o'zgartiring. Xabar oxiriga qolgan qarz, to'lov sanasi va <b>💳 To'lov qilish</b> tugmasi avtomatik qo'shiladi.</div>
+    ${presetsHtml(d)}
+    <textarea id="msgText">${esc(fillVars(data.template, d))}</textarea>
+    <button class="btn" data-act="send">Yuborish</button>`);
+}
+
+// Bitta oy to'lovining muddatini ko'chirish
+function showRowEdit(n) {
+  const d = data.debtors.find((x) => x.id === openId), r = d.c.rows.find((x) => x.n === n);
+  sheet(`
+    <div class="head"><div><h2>${n}-oy to'lovi</h2><div class="muted">${esc(d.name)} · ${fmt(r.amount, d.currency)}</div></div>
+      <button class="x" data-act="back">✕</button></div>
+    <label>To'lash kerak bo'lgan sana</label>
+    <input id="rowDate" type="date" value="${r.due}">
+    <div class="muted" style="margin-top:8px">Mijoz kechiktirishni so'rasa yoki oldinroq to'lash kelishilgan bo'lsa, sanani shu yerda o'zgartiring.</div>
+    <button class="btn" data-act="saverow" data-n="${n}">Saqlash</button>
+    ${d.overrides && d.overrides[n] ? `<button class="btn sec" data-act="clearrow" data-n="${n}">Asl sanaga qaytarish (${fdate(computedDue(d, n))})</button>` : ""}`);
+}
+
+// Sanaga 1 oy qo'shadi (31-yanvar -> 28/29-fevral)
+function plusMonth(s) {
+  const [y0, m0, d0] = s.split("-").map(Number), idx = m0;
+  const y = y0 + Math.floor(idx / 12), m = (idx % 12) + 1, last = new Date(y, m, 0).getDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(Math.min(d0, last)).padStart(2, "0")}`;
+}
+
+// Asl (qo'lda o'zgartirilmagan) sana
+function computedDue(d, n) {
+  const [y0, m0] = d.firstDue.split("-").map(Number), idx = m0 - 1 + (n - 1);
+  const y = y0 + Math.floor(idx / 12), m = (idx % 12) + 1, last = new Date(y, m, 0).getDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(Math.min(Number(d.firstDue.slice(8)), last)).padStart(2, "0")}`;
+}
+
+// To'lovni tuzatish (summa, sana, izoh)
+function showPayEdit(pid) {
+  const d = data.debtors.find((x) => x.id === openId), p = d.payments.find((x) => x.id === pid);
+  sheet(`
+    <div class="head"><div><h2>To'lovni tuzatish</h2><div class="muted">${esc(d.name)}</div></div>
+      <button class="x" data-act="back">✕</button></div>
+    <div class="two"><div><label>Summa</label><input id="epAmt" type="text" inputmode="text" autocomplete="off" value="${p.amount}"></div>
+      <div><label>Qachon to'langan</label><input id="epDate" type="date" value="${new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(new Date(p.date))}" max="${today()}"></div></div>
+    <label>Izoh</label><input id="epNote" maxlength="100" value="${esc(p.note || "")}">
+    <div class="muted" style="margin-top:8px">Masalan: mijoz bir kun kech to'lagan yoki ikki oylikni birdan bergan bo'lsa, sana va summani shu yerda to'g'rilang.</div>
+    <button class="btn" data-act="savepay" data-pid="${esc(pid)}">Saqlash</button>`);
+}
+
+// Tayyor matnlar ro'yxati: "📋 Tayyor matnlar" bosilganda ochiladi, birini bossangiz matn maydoniga tushadi.
+// d berilsa (bitta mijozga xabar) — o'zgaruvchilar darhol mijoz ma'lumoti bilan to'ldiriladi
+function presetsHtml(d) {
+  return `<button class="chip" data-act="togglepresets" style="margin-top:10px">📋 Tayyor matnlar ▾</button>
+    <div class="presets" id="presets">${(data.presets || []).map((p, i) => `<button class="preset" data-preset="${i}">
+      <b>${esc(p.title)}</b>${esc(d ? fillVars(p.text, d) : p.text)}</button>`).join("")}</div>`;
+}
+
+// {ism} {sana} {summa} {sotilgan} {mahsulot} -> mijoz ma'lumoti (serverdagi bilan bir xil)
+function fillVars(text, d) {
+  const c = d.c;
+  return String(text).replaceAll("{ism}", d.name).replaceAll("{sana}", fdate(c.nextDue) || "-")
+    .replaceAll("{summa}", fmt(c.dueNow ?? 0, d.currency)).replaceAll("{sotilgan}", fdate(d.saleDate))
+    .replaceAll("{mahsulot}", d.product || "mahsulot");
+}
+
+function showTpl() {
+  sheet(`
+    <div class="head"><h2>Standart eslatma matni</h2><button class="x" data-act="close">✕</button></div>
+    <div class="muted">Avtomatik eslatmalarda (to'lov kuni va kechikkanlarga) shu matn ishlatiladi. Tayyor matnlardan birini tanlang yoki o'zingiz yozing. Quyidagi so'zlarni bossangiz, matnga qo'shiladi — yuborishda mijoz ma'lumoti bilan almashadi:</div>
+    <div class="vars">${[["{ism}", "ism"], ["{sana}", "to'lov sanasi"], ["{summa}", "summa"], ["{sotilgan}", "sotilgan sana"], ["{mahsulot}", "mahsulot"]]
+      .map(([v, t]) => `<button data-var="${v}">${v} · ${t}</button>`).join("")}</div>
+    ${presetsHtml()}
+    <textarea id="tplText">${esc(data.template)}</textarea>
+    <button class="btn" data-act="savetpl">Saqlash</button>
+    <button class="btn sec" data-act="restpl">Asl matnga qaytarish</button>`);
+}
+
+// To'lov kartalari: egasi va xodimlar qo'shadi, mijoz "💳 To'lov qilish"ni bosganda ko'radi
+const fcard = (n) => String(n).replace(/(\d{4})(?=\d)/g, "$1 ");
+function showCards() {
+  const cards = data.cards || [];
+  sheet(`
+    <div class="head"><h2>💳 To'lov kartalari</h2><button class="x" data-act="close">✕</button></div>
+    <div class="muted">Mijoz xabaridagi <b>💳 To'lov qilish</b> tugmasini bossa, shu kartalar va to'lashi kerak bo'lgan summa ko'rinadi. Mijoz "To'lov qildim" desa, sizga tasdiqlash tugmasi bilan xabar keladi.</div>
+    <div style="margin-top:12px">${cards.map((k) => `<div class="pcard"><div><div class="muted">${esc(k.bank || "Karta")}</div>
+      <div class="num">${fcard(k.number)}</div>${k.holder ? `<div class="muted">${esc(k.holder)}</div>` : ""}</div>
+      <button class="del" data-delcard="${esc(k.id)}" title="O'chirish">🗑</button></div>`).join("") || '<div class="muted">Hali karta qo\'shilmagan.</div>'}</div>
+    <h4>Yangi karta</h4>
+    <label>Karta raqami</label><input id="cNum" inputmode="numeric" autocomplete="off" maxlength="23" placeholder="8600 1234 5678 9012">
+    <div class="two"><div><label>Karta egasi</label><input id="cHolder" maxlength="60" placeholder="Ism Familiya"></div>
+      <div><label>Bank / turi</label><input id="cBank" maxlength="40" placeholder="Uzcard, Humo, Visa…"></div></div>
+    <button class="btn" data-act="addcard">Kartani qo'shish</button>`);
+}
+
+function showAdd() {
+  sheet(`
+    <div class="head"><h2>Yangi mijoz</h2><button class="x" data-act="close">✕</button></div>
+    <label>Mijoz ismi</label><input id="aName" maxlength="60" placeholder="Mijozning ismi">
+    <div class="two"><div><label>Telefon</label><input id="aPhone" type="tel" placeholder="Telefon raqami"></div>
+      <div><label>ID (ixtiyoriy)</label><input id="aCode" maxlength="30" placeholder="ID raqami"></div></div>
+    <label>Mahsulot (soni bilan)</label><input id="aProduct" maxlength="80" placeholder="Masalan: 2 ta iPhone 15">
+    <div class="two"><div><label>Xarid narxi (jami)</label><input id="aBuy" type="text" inputmode="text" autocomplete="off" placeholder="12 mln ham bo'ladi"></div>
+      <div><label>Sotuv narxi (jami)</label><input id="aTotal" type="text" inputmode="text" autocomplete="off" placeholder="Sotuv summasi"></div></div>
+    <div class="two"><div><label>Oldindan to'lov</label><input id="aDown" type="text" inputmode="text" autocomplete="off" placeholder="0"></div>
+      <div><label>Necha oyga</label><input id="aMonths" type="number" inputmode="numeric" min="1" max="120" placeholder="Masalan: 6"></div></div>
+    <div class="two"><div><label>Sotilgan sana</label><input id="aSale" type="date" value="${today()}"></div>
+      <div><label>1-to'lov sanasi</label><input id="aFirst" type="date" value="${plusMonth(today())}"></div></div>
+    <label>Valyuta</label>
+    <select id="aCur"><option value="USD">Dollar ($)</option><option value="EUR">Yevro (€)</option><option value="TRY">Lira (₺)</option><option value="UZS">So'm</option></select>
+    <label>Izoh (ixtiyoriy, faqat sizga ko'rinadi)</label><input id="aNote" maxlength="200" placeholder="Masalan: kafil — akasi, oylikdan keyin to'laydi">
+    <div class="muted" id="aInfo" style="margin-top:8px"></div>
+    <button class="btn" data-act="add">Qo'shish</button>`);
+}
+
+// Tugma bosilganda: javob kelguncha tugma o'chadi (ikki marta bosilib, to'lov ikki marta yozilmasin)
+let busy = false;
+async function run(fn, btn) {
+  if (busy) return;
+  busy = true;
+  const old = btn?.innerHTML;
+  if (btn) { btn.classList.add("busy"); if (btn.classList.contains("btn")) btn.innerHTML = "⏳ " + old; }
+  try { await fn(); haptic("success"); }
+  catch (e) { haptic("error"); alertMsg(e.message || "Xatolik. Internetni tekshirib, qayta urinib ko'ring."); }
+  finally { busy = false; if (btn && btn.isConnected) { btn.classList.remove("busy"); btn.innerHTML = old; } }
+}
+
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest("button, .card, [data-row], [data-pay]");
+  if (!t) { if (e.target === $("ov")) closeSheet(); return; }
+  if (t.id === "fab") { firstTouched = false; return showAdd(); }
+  if (t.dataset.row) return showRowEdit(Number(t.dataset.row));
+  if (t.dataset.pay) return showPayEdit(t.dataset.pay);
+  if (t.dataset.tab) { tab = t.dataset.tab; return render(); }
+  if (t.classList.contains("card")) return showDetail(t.dataset.id);
+  if (t.dataset.fill) return ($("payAmt").value = t.dataset.fill);
+  if (t.dataset.preset) {
+    const p = data.presets[Number(t.dataset.preset)], box = $("msgText") || $("tplText");
+    const d = $("msgText") ? data.debtors.find((x) => x.id === openId) : null;
+    box.value = d ? fillVars(p.text, d) : p.text;
+    $("presets").classList.remove("show");
+    return box.focus();
+  }
+  if (t.dataset.var) {
+    const box = $("tplText"), at = box.selectionStart ?? box.value.length;
+    box.value = box.value.slice(0, at) + t.dataset.var + box.value.slice(box.selectionEnd ?? at);
+    return box.focus();
+  }
+  if (t.dataset.copy) {
+    const v = t.dataset.copy;
+    try { await navigator.clipboard.writeText(v); t.textContent = "✅ Nusxa olindi"; }
+    catch { prompt("Karta raqami:", v); }
+    return;
+  }
+  if (t.dataset.delcard) return run(async () => {
+    if (!(await confirmMsg("Bu karta o'chirilsinmi?"))) return;
+    await api("/settings?delCard=" + t.dataset.delcard, "POST"); await load(); showCards();
+  }, t);
+  if (t.dataset.excuse) return run(async () => {
+    const id = t.dataset.excuse, text = $("exc-" + id).value;
+    await api("/excuse", "POST", { id, text }); await load(); alertMsg("Xabaringiz egasiga yuborildi ✅");
+  }, t);
+  if (t.dataset.undo) return run(async () => {
+    if (!(await confirmMsg("Bu to'lov bekor qilinsinmi?"))) return;
+    await api(`/pay?id=${openId}&pid=${t.dataset.undo}`, "DELETE"); await load();
+  }, t);
+  switch (t.dataset.act) {
+    case "close": return closeSheet();
+    case "back": return showDetail(openId);
+    case "excel": return run(async () => { await api("/export", "POST"); alertMsg("Excel fayl Telegram chatingizga yuborildi 📥"); }, t);
+    case "saverow": return run(async () => {
+      await api("/schedule", "POST", { id: openId, n: t.dataset.n, date: $("rowDate").value }); await load();
+    }, t);
+    case "clearrow": return run(async () => {
+      await api("/schedule", "POST", { id: openId, n: t.dataset.n, date: "" }); await load();
+    }, t);
+    case "savepay": return run(async () => {
+      await api("/pay", "PUT", { id: openId, pid: t.dataset.pid, amount: $("epAmt").value, date: $("epDate").value, note: $("epNote").value }); await load();
+    }, t);
+    case "tpl": return showTpl();
+    case "cards": return showCards();
+    case "togglepresets": return $("presets").classList.toggle("show");
+    case "addcard": return run(async () => {
+      await api("/settings", "POST", { card: { number: $("cNum").value, holder: $("cHolder").value, bank: $("cBank").value } });
+      await load(); showCards();
+    }, t);
+    case "savetpl": return run(async () => { await api("/settings", "POST", { template: $("tplText").value }); closeSheet(); await load(); }, t);
+    case "restpl": return run(async () => { await api("/settings", "POST", { template: "" }); closeSheet(); await load(); }, t);
+    case "pay": return run(async () => {
+      await api("/pay", "POST", { id: openId, amount: $("payAmt").value, date: $("payDate").value }); await load();
+    }, t);
+    case "msg": return showMsg();
+    case "send": return run(async () => {
+      await api("/remind", "POST", { id: openId, text: $("msgText").value });
+      await load(); alertMsg("Xabar yuborildi ✅ (nusxasi sizning chatingizga ham keldi)");
+    }, t);
+    case "invite": {
+      const d = data.debtors.find((x) => x.id === openId);
+      const link = `https://t.me/${data.bot}?start=d_${d.inv}`;
+      return tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Assalomu alaykum! To'lovlaringizni ko'rish uchun shu havolani bosing:")}`);
+    }
+    case "relink": return run(async () => {
+      if (!(await confirmMsg("Eski havola ishlamay qoladi va mijoz qayta ulanishi kerak. Davom etamizmi?"))) return;
+      await api("/settings?relink=" + openId, "POST"); await load();
+    }, t);
+    case "del": return run(async () => {
+      if (!(await confirmMsg("Mijoz va uning barcha to'lovlari o'chiriladi. Ishonchingiz komilmi?"))) return;
+      await api(`/debtors?id=${openId}`, "DELETE"); closeSheet(); await load();
+    }, t);
+    case "add": return run(async () => {
+      await api("/debtors", "POST", { name: $("aName").value, phone: $("aPhone").value, code: $("aCode").value,
+        product: $("aProduct").value, qty: 1, buyPrice: $("aBuy").value, total: $("aTotal").value,
+        down: $("aDown").value, months: $("aMonths").value, saleDate: $("aSale").value, firstDue: $("aFirst").value || undefined,
+        currency: $("aCur").value, note: $("aNote").value });
+      closeSheet(); await load();
+    }, t);
+  }
+});
+
+// Harfli summani tushunadi: "12 mln", "1,5 mlrd", "500 ming", "300k", "12 000 000"
+function pm(raw) {
+  const m = String(raw ?? "").toLowerCase().replace(/[‘’ʻʼ`´]/g, "'").replace(/[$€₺]/g, "").trim().replace(/\s*(so'm|som|sum|usd|dollar|dolar|euro|eur|tl|lira)\.?$/, "").match(/^([\d\s.,]+?)\s*(mlrd|mlyard|milliard|milyar|mld|mln|million|milyon|m|ming|bin|k)?\.?$/);
+  if (!m) return NaN;
+  let s = m[1].replace(/\s/g, "").replace(/[.,]+$/, "");
+  const d = s.lastIndexOf("."), c = s.lastIndexOf(",");
+  if (d >= 0 && c >= 0) { const k = Math.max(d, c); s = s.slice(0, k).replace(/[.,]/g, "") + "." + s.slice(k + 1); }
+  else if (d >= 0 || c >= 0) { const p = s.split(d >= 0 ? "." : ","); s = p.length > 2 || p[1].length === 3 ? p.join("") : p.join("."); }
+  const mult = /^(mlrd|mlyard|milliard|milyar|mld)$/.test(m[2] ?? "") ? 1e9 : /^(mln|million|milyon|m)$/.test(m[2] ?? "") ? 1e6 : m[2] ? 1e3 : 1;
+  return Math.round(Number(s) * mult * 100) / 100;
+}
+
+let firstTouched = false;
+document.addEventListener("input", (e) => {
+  if (e.target.id === "aFirst") firstTouched = true;
+  if (e.target.id === "aSale" && !firstTouched && e.target.value) $("aFirst").value = plusMonth(e.target.value);
+  if (e.target.id === "cNum") e.target.value = fcard(e.target.value.replace(/\D/g, "").slice(0, 19));
+  const i = $("aInfo"); if (!i) return;
+  const cur = $("aCur").value, buyRaw = $("aBuy").value.trim(), downRaw = $("aDown").value.trim();
+  const tot = pm($("aTotal").value), down = downRaw ? pm(downRaw) : 0, m = Number($("aMonths").value), buy = buyRaw ? pm(buyRaw) : null;
+  const L = [];
+  if (buy > 0) L.push(`Xarid: ${fmt(buy, cur)}`);
+  if (tot > 0) L.push(`Sotuv: ${fmt(tot, cur)}`);
+  if (down > 0) L.push(`Oldindan: ${fmt(down, cur)}`);
+  if (tot > 0 && m > 0 && down >= 0 && down < tot) L.push(`Oylik: ${fmt((tot - down) / m, cur)}`);
+  if (tot > 0 && buy != null && !isNaN(buy)) L.push(`Foyda: ${fmt(tot - buy, cur)}`);
+  i.textContent = L.join(" · ");
+});
+
+load();
+</script>
+</body>
+</html>
