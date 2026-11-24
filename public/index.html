@@ -10,10 +10,10 @@
     --bg: var(--tg-theme-bg-color, #fff); --text: var(--tg-theme-text-color, #111);
     --hint: var(--tg-theme-hint-color, #8a8a8f); --card: var(--tg-theme-secondary-bg-color, #f2f2f6);
     --btn: var(--tg-theme-button-color, #2481cc); --btntext: var(--tg-theme-button-text-color, #fff);
-    --green: #1fb86a; --red: #f0455a; --amber: #f59e0b;
-    --g-main: linear-gradient(135deg, #6a5cff 0%, #2f9bff 100%);
-    --g-green: linear-gradient(90deg, #1fb86a, #5be0a0);
-    --g-warm: linear-gradient(135deg, #ff7a59, #ff4f8b);
+    --green: #059669; --red: #f0455a; --amber: #f59e0b;
+    --g-main: linear-gradient(135deg, #065f46 0%, #10b981 100%);
+    --g-green: linear-gradient(90deg, #059669, #34d399);
+    --g-warm: linear-gradient(135deg, #b4892f, #e9c47e);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; padding: 16px 16px 90px; background: var(--bg); color: var(--text);
@@ -24,7 +24,7 @@
   .icons { display: flex; gap: 6px; }
   .icons button { border: 0; background: var(--card); color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
   .summary { background: var(--g-main); color: #fff; border-radius: 20px; padding: 18px; margin-bottom: 12px;
-    box-shadow: 0 8px 22px rgba(79,110,255,.35); position: relative; overflow: hidden; }
+    box-shadow: 0 8px 22px rgba(4,120,87,.35); position: relative; overflow: hidden; }
   .summary::after { content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%;
     background: rgba(255,255,255,.14); }
   .summary .muted { color: rgba(255,255,255,.8); }
@@ -35,8 +35,8 @@
   .summary .bar i { background: #fff; }
   /* Aborot kartasi: Umumiy -> C -> T, bosilganda aylanadi */
   .abwrap { perspective: 1200px; margin-bottom: 12px; }
-  .ab { --gold: #e9c47e; background: linear-gradient(160deg, #2c3b5f 0%, #1b2236 100%); color: #fff; border-radius: 22px;
-    padding: 18px 18px 16px; box-shadow: 0 10px 26px rgba(20,28,50,.35); cursor: pointer; user-select: none;
+  .ab { --gold: #e9c47e; background: linear-gradient(160deg, #0f5240 0%, #06281f 100%); color: #fff; border-radius: 22px;
+    padding: 18px 18px 16px; box-shadow: 0 10px 26px rgba(4,40,30,.42); cursor: pointer; user-select: none;
     transform-style: preserve-3d; transition: transform .22s ease-in; }
   .ab .hd { display: flex; justify-content: space-between; align-items: center; font-size: 13px; letter-spacing: .4px; }
   .ab .hd b { color: var(--gold); font-weight: 700; text-transform: uppercase; }
@@ -61,7 +61,7 @@
   .bar i { display: block; height: 100%; background: var(--g-green); border-radius: 4px; }
   .tabs { display: flex; gap: 6px; margin: 14px 0 10px; }
   .tabs button { flex: 1; padding: 10px 4px; border: 0; border-radius: 12px; background: var(--card); color: var(--text); font-size: 14px; font-weight: 500; }
-  .tabs button.on { background: var(--g-main); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(79,110,255,.35); }
+  .tabs button.on { background: var(--g-main); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(4,120,87,.35); }
   .card { background: var(--card); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; cursor: pointer;
     border-left: 5px solid var(--green); display: flex; gap: 12px; align-items: flex-start; transition: transform .1s; }
   .card:active { transform: scale(.98); }
@@ -75,10 +75,10 @@
   .row b { color: var(--text); }
   .badge { font-size: 12px; padding: 3px 9px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
   .b-red { background: rgba(240,69,90,.16); color: var(--red); }
-  .b-green { background: rgba(31,184,106,.16); color: var(--green); }
+  .b-green { background: rgba(5,150,105,.16); color: var(--green); }
   .empty { text-align: center; color: var(--hint); padding: 40px 10px; }
   .fab { position: fixed; right: 16px; bottom: 16px; padding: 15px 22px; border: 0; border-radius: 30px; background: var(--g-warm);
-    color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 8px 20px rgba(255,79,139,.45); }
+    color: #10261d; font-size: 16px; font-weight: 700; box-shadow: 0 8px 20px rgba(180,137,47,.45); }
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; z-index: 10; }
   .overlay.show { display: flex; }
   .sheet { background: var(--bg); width: 100%; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; }
@@ -92,16 +92,16 @@
   .two > *, input, select { min-width: 0; }
   input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 46px; padding: 12px 8px; }
   .btn { width: 100%; padding: 14px; border: 0; border-radius: 14px; background: var(--g-main); color: #fff; font-size: 16px; font-weight: 700; margin-top: 12px;
-    box-shadow: 0 6px 16px rgba(79,110,255,.35); }
+    box-shadow: 0 6px 16px rgba(4,120,87,.35); }
   .btn.sec { background: var(--card); color: var(--text); font-weight: 500; margin-top: 8px; box-shadow: none; }
   .btn.danger { color: var(--red); }
   .chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
   .chip { padding: 7px 12px; border-radius: 20px; background: var(--card); border: 0; color: var(--text); font-size: 13px; }
   .stat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
-  .stat div { background: var(--card); border-radius: 14px; padding: 10px 12px; border-top: 3px solid rgba(106,92,255,.5); }
+  .stat div { background: var(--card); border-radius: 14px; padding: 10px 12px; border-top: 3px solid rgba(5,150,105,.5); }
   .stat div:nth-child(2) { border-top-color: var(--red); } .stat div:nth-child(3) { border-top-color: var(--green); }
-  .stat div:nth-child(4) { border-top-color: var(--amber); } .stat div:nth-child(5) { border-top-color: #2f9bff; }
-  .stat div:nth-child(6) { border-top-color: #ff4f8b; }
+  .stat div:nth-child(4) { border-top-color: var(--amber); } .stat div:nth-child(5) { border-top-color: #14b8a6; }
+  .stat div:nth-child(6) { border-top-color: #c9a24f; }
   .stat b { display: block; font-size: 16px; margin-top: 2px; }
   .line { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--card); gap: 8px; }
   .line button { border: 0; background: none; color: var(--hint); font-size: 16px; padding: 4px 8px; }
@@ -222,8 +222,8 @@ function abInner() {
       <span class="nx">↻ ${next} <span class="dots">${AB.map((_, i) => `<i class="${i === abView ? "on" : ""}"></i>`).join("")}</span></span></div>
     <div class="lbl">Bu oy yig'ilishi kerak</div>
     <div class="big">${fmt(s.need, s.cur)}</div>
-    <div class="two"><div class="box"><span>Yig'ildi</span><b style="color:#86e3ad">${fmt(s.got, s.cur)}</b></div>
-      <div class="box"><span>Qoldi</span><b style="color:#ff9a8b">${fmt(left, s.cur)}</b></div></div>
+    <div class="two"><div class="box"><span>Yig'ildi</span><b style="color:#6ee7b7">${fmt(s.got, s.cur)}</b></div>
+      <div class="box"><span>Qoldi</span><b style="color:#ffab96">${fmt(left, s.cur)}</b></div></div>
     <div class="late">Oldingi oylardan kechikkan: ${fmt(s.late, s.cur)}</div>
     <div class="pbar"><i style="width:${pct}%"></i></div>
     <div class="ft"><span>💰 Jami qolgan qarz<small>${title}${s.other ? " · faqat " + s.cur : ""}</small></span><b>${fmt(s.rem, s.cur)}</b></div>`;
@@ -260,7 +260,7 @@ function card(d) {
 
 // Ismga qarab doimiy rangli avatar
 const initials = (n) => n.replace(/^@/, "").split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
-const PAL = [["#6a5cff", "#2f9bff"], ["#ff7a59", "#ff4f8b"], ["#1fb86a", "#2fd1c5"], ["#f59e0b", "#ff7a59"], ["#a855f7", "#ec4899"], ["#06b6d4", "#3b82f6"]];
+const PAL = [["#047857", "#10b981"], ["#0f766e", "#14b8a6"], ["#065f46", "#34d399"], ["#9a7428", "#d9b25f"], ["#115e59", "#2dd4bf"], ["#166534", "#4ade80"]];
 const avatarBg = (n) => { let h = 0; for (const ch of n) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const [a, b] = PAL[h % PAL.length]; return `linear-gradient(135deg, ${a}, ${b})`; };
 
 // ---------- mijoz ko'rinishi (faqat o'zining ma'lumoti) ----------
