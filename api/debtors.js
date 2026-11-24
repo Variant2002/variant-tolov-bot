@@ -10,7 +10,7 @@ const publicCard = (k) => ({ id: k.id, number: k.number, holder: k.holder, bank:
 // Egasi ko'radigan to'liq ko'rinish
 const ownerView = (d) => ({
   id: d.id, inv: d.inv ?? d.id, name: d.name, phone: d.phone ?? "", product: d.product ?? "", qty: d.qty ?? 1, code: d.code ?? "",
-  note: d.note ?? "", currency: d.currency, buyPrice: d.buyPrice ?? null, total: d.total, down: d.down, months: d.months,
+  pool: d.pool ?? "", note: d.note ?? "", currency: d.currency, buyPrice: d.buyPrice ?? null, total: d.total, down: d.down, months: d.months,
   monthly: d.monthly, saleDate: d.saleDate, firstDue: d.firstDue, overrides: d.overrides ?? {}, linked: !!d.tgId, inGroup: !!d.chatId,
   payments: [...d.payments].reverse(), excuses: [...d.excuses].reverse(), messages: [...d.messages].reverse(), c: calc(d),
 });
