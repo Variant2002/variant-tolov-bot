@@ -148,9 +148,12 @@ bot.command("start", async (ctx) => {
 });
 
 bot.command("yordam", (ctx) => ctx.reply(HELP, HTML));
+// Guruhda web_app tugma ishlamaydi (Telegram cheklovi) — o'rniga Direct Link Mini App (BotFather /newapp, qisqa nom APP_SHORT_NAME yoki "panel")
 bot.command("panel", admin(async (ctx) => {
-  if (!isPrivate(ctx)) return ctx.reply("Panelni ochish uchun botga shaxsiy chatda /panel yozing.");
-  await ctx.reply("Panel:", { reply_markup: panelKb() });
+  const kb = isPrivate(ctx)
+    ? panelKb()
+    : new InlineKeyboard().url("📊 Panelni ochish", `https://t.me/${ctx.me.username}/${process.env.APP_SHORT_NAME || "panel"}`);
+  await ctx.reply("Panel:", { reply_markup: kb });
 }));
 
 bot.command("qarzim", priv(async (ctx) => {
