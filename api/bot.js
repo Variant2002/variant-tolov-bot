@@ -13,25 +13,56 @@ const bot = new Bot(BOT_TOKEN);
 const HTML = { parse_mode: "HTML" };
 
 const HELP = `<b>Buyruqlar</b> (faqat egasi va vakillar uchun)
-/yangi Ism Jami Oy [valyuta] [1-to'lov sanasi]
+➕ /yangi Ism Jami Oy [valyuta] [1-to'lov sanasi]
   masalan: <code>/yangi Ism 34320 12 25.11.2026</code>
   (to'liq ma'lumot — mahsulot, telefon, xarid narxi — uchun /panel dan foydalaning)
-/royxat — hamma mijozlar holati
-/qarz Ism — mijoz kartochkasi va jadvali
-/tolov Ism Summa — to'lov kiritish
-/eslat — kechikkanlarga qarz haqida xabar
-/eslat Ism — bitta mijozga xabar
-/eslat Ism: o'z matningiz — o'zingiz yozgan matn bilan
-/havola Ism — mijoz uchun maxsus havola
-/excel — hamma ma'lumotni Excel faylda olish
-/ochir Ism — mijozni o'chirish
-/panel — panelni ochish
-/guruh — (faqat egasi) botni shu guruhga biriktirish. Bir marta qilinadi, keyin boshqa guruhga ko'chirib bo'lmaydi.
-Biriktirilgan guruh a'zolari hammasini qila oladi: mijoz qo'shish, to'lov kiritish, xabar yuborish.
+📋 /royxat — hamma mijozlar holati
+🔎 /qarz Ism — mijoz kartochkasi va jadvali
+💵 /tolov Ism Summa — to'lov kiritish
+🔔 /eslat — kechikkanlarga qarz haqida xabar
+🔔 /eslat Ism — bitta mijozga xabar
+✍️ /eslat Ism: o'z matningiz — o'zingiz yozgan matn bilan
+🔗 /havola Ism — mijoz uchun maxsus havola
+📥 /excel — hamma ma'lumotni Excel faylda olish
+🗑 /ochir Ism — mijozni o'chirish
+📊 /panel — panelni ochish
+🔒 /guruh — (faqat egasi) botni shu guruhga biriktirish. Bir marta qilinadi, keyin boshqa guruhga ko'chirib bo'lmaydi.
+👥 Biriktirilgan guruh a'zolari hammasini qila oladi: mijoz qo'shish, to'lov kiritish, xabar yuborish.
 
-<b>Guruhdan:</b> botni guruhga qo'shib yozing:
+💬 <b>Guruhdan:</b> botni guruhga qo'shib yozing:
 <i>[Ism]dan 200 dollar oldim</i>
 Bot qarzdan ayiradi va qolganini aytadi.`;
+
+// Telegram "/" menyusi: har bir buyruq oldida o'z belgisi. Har bir ishga tushishda bir marta o'rnatiladi.
+const GROUP_MENU = [
+  ["yordam", "❓ Hamma buyruqlar"],
+  ["royxat", "📋 Hamma mijozlar holati"],
+  ["qarz", "🔎 Mijoz kartochkasi: /qarz Ism"],
+  ["tolov", "💵 To'lov kiritish: /tolov Ism Summa"],
+  ["yangi", "➕ Yangi mijoz qo'shish"],
+  ["eslat", "🔔 Kechikkanlarga eslatma yuborish"],
+  ["havola", "🔗 Mijoz uchun maxsus havola"],
+  ["excel", "📥 Excel faylda olish"],
+  ["ochir", "🗑 Mijozni o'chirish"],
+];
+const PRIVATE_MENU = [
+  ["panel", "📊 Panelni ochish"],
+  ["yordam", "❓ Hamma buyruqlar"],
+  ["qarzim", "👤 Mening qarzim"],
+  ["maxfiylik", "🔒 Maxfiylik"],
+];
+const toCmds = (m) => m.map(([command, description]) => ({ command, description }));
+let menuSet = false;
+bot.use(async (ctx, next) => {
+  if (!menuSet) {
+    menuSet = true;
+    await Promise.all([
+      bot.api.setMyCommands(toCmds(GROUP_MENU), { scope: { type: "all_group_chats" } }),
+      bot.api.setMyCommands(toCmds(PRIVATE_MENU), { scope: { type: "all_private_chats" } }),
+    ]).catch((e) => console.error("menyu o'rnatilmadi:", e.description ?? e.message));
+  }
+  return next();
+});
 
 const errText = (e) => (e instanceof UserError ? e.message : "Xatolik yuz berdi, qayta urinib ko'ring.");
 const isPrivate = (ctx) => ctx.chat?.type === "private";
