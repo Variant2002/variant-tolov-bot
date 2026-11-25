@@ -21,8 +21,12 @@
   h2 { margin: 0 0 4px; font-size: 20px; }
   .muted { color: var(--hint); font-size: 13px; }
   .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  /* Panel sarlavhasi: nom bir qatorda, tugmalar sig'masa pastga tushadi */
+  .top.head { flex-wrap: wrap; gap: 8px 10px; }
+  .top.head h2 { white-space: nowrap; }
   .icons { display: flex; gap: 6px; }
-  .icons button { border: 0; background: var(--card); color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .icons button { border: 0; background: var(--card); color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 13px;
+    font-weight: 600; white-space: nowrap; }
   .summary { background: var(--g-main); color: #fff; border-radius: 20px; padding: 18px; margin-bottom: 12px;
     box-shadow: 0 8px 22px rgba(4,120,87,.35); position: relative; overflow: hidden; }
   .summary::after { content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%;
@@ -49,8 +53,10 @@
   .ab .box { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 11px 13px; }
   .ab .box span { color: rgba(255,255,255,.78); font-size: 13px; }
   .ab .box b { display: block; font-size: 18px; margin-top: 3px; font-variant-numeric: tabular-nums; }
-  .ab .late { color: rgba(255,255,255,.82); font-size: 13px; margin-top: 12px; }
-  .ab .pbar { height: 8px; background: rgba(255,255,255,.12); border-radius: 4px; overflow: hidden; margin: 8px 0 14px; }
+  .ab .pl { display: flex; justify-content: space-between; color: rgba(255,255,255,.82); font-size: 13px; margin-top: 14px; }
+  .ab .pl b { color: var(--gold); font-variant-numeric: tabular-nums; }
+  .ab .pbar { height: 8px; background: rgba(255,255,255,.12); border-radius: 4px; overflow: hidden; margin: 7px 0 10px; }
+  .ab .late { color: rgba(255,255,255,.66); font-size: 12.5px; margin-bottom: 14px; }
   .ab .pbar i { display: block; height: 100%; background: var(--gold); border-radius: 4px; }
   .ab .ft { border-top: 1px solid rgba(255,255,255,.1); padding-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .ab .ft span { color: rgba(255,255,255,.85); font-size: 14px; } .ab .ft small { display: block; color: rgba(255,255,255,.6); font-size: 12px; }
@@ -77,8 +83,10 @@
   .b-red { background: rgba(240,69,90,.16); color: var(--red); }
   .b-green { background: rgba(5,150,105,.16); color: var(--green); }
   .empty { text-align: center; color: var(--hint); padding: 40px 10px; }
-  .fab { position: fixed; right: 16px; bottom: 16px; padding: 15px 22px; border: 0; border-radius: 30px; background: var(--g-warm);
-    color: #10261d; font-size: 16px; font-weight: 700; box-shadow: 0 8px 20px rgba(180,137,47,.45); }
+  /* Ixcham dumaloq tugma: mijoz kartalarining matnini to'smaydi */
+  .fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); width: 56px; height: 56px; padding: 0;
+    border: 0; border-radius: 50%; background: var(--g-warm); color: #10261d; font-size: 30px; font-weight: 600; line-height: 56px;
+    box-shadow: 0 8px 20px rgba(180,137,47,.45); z-index: 5; }
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; z-index: 10; }
   .overlay.show { display: flex; }
   .sheet { background: var(--bg); width: 100%; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; }
@@ -128,7 +136,7 @@
 <body>
 <div id="app"><div class="empty">Yuklanmoqda…</div></div>
 <div class="muted" style="text-align:center;margin-top:28px"><a class="tel" href="/privacy.html">Maxfiylik</a> · <a class="tel" href="/terms.html">Shartlar</a></div>
-<button class="fab" id="fab" hidden>＋ Mijoz qo'shish</button>
+<button class="fab" id="fab" hidden aria-label="Mijoz qo'shish" title="Mijoz qo'shish">＋</button>
 <div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
 
 <script>
@@ -183,7 +191,7 @@ function render() {
 
   $("app").innerHTML = `
     ${data.demo ? `<div class="summary" style="border:1px dashed var(--green)"><b>👀 Namuna rejim</b><div class="muted">Bu yerdagi mijozlar soxta. Panel qanday ishlashini ko'rishingiz mumkin, lekin o'zgarishlar saqlanmaydi.</div></div>` : ""}
-    <div class="top"><div><h2>💼 Qarz nazorati</h2><div class="muted">${data.debtors.length} ta mijoz</div></div>
+    <div class="top head"><div><h2>💼 Qarz nazorati</h2><div class="muted">${data.debtors.length} ta mijoz</div></div>
       <div class="icons"><button data-act="excel">📥 Excel</button><button data-act="tpl">✉️ Matn</button><button data-act="cards">💳 Karta</button></div></div>
     <div style="margin-top:12px">${sums}</div>
     <div class="tabs">${[["all", "Faol"], ["late", "Kechikkan"], ["done", "Tugagan"]].map(([k, v]) => `<button data-tab="${k}" class="${tab === k ? "on" : ""}">${v}</button>`).join("")}</div>
@@ -224,8 +232,9 @@ function abInner() {
     <div class="big">${fmt(s.need, s.cur)}</div>
     <div class="two"><div class="box"><span>Yig'ildi</span><b style="color:#6ee7b7">${fmt(s.got, s.cur)}</b></div>
       <div class="box"><span>Qoldi</span><b style="color:#ffab96">${fmt(left, s.cur)}</b></div></div>
-    <div class="late">Oldingi oylardan kechikkan: ${fmt(s.late, s.cur)}</div>
+    <div class="pl"><span>Bu oy yig'ildi</span><b>${pct}%</b></div>
     <div class="pbar"><i style="width:${pct}%"></i></div>
+    <div class="late">Oldingi oylardan kechikkan: ${fmt(s.late, s.cur)}</div>
     <div class="ft"><span>💰 Jami qolgan qarz<small>${title}${s.other ? " · faqat " + s.cur : ""}</small></span><b>${fmt(s.rem, s.cur)}</b></div>`;
 }
 
