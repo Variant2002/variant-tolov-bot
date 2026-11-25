@@ -26,7 +26,29 @@
   .top.head h2 { white-space: nowrap; }
   .icons { display: flex; gap: 6px; }
   .icons button { border: 0; background: var(--card); color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 13px;
-    font-weight: 600; white-space: nowrap; }
+    font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  /* Bir xil chiziqli ikonlar (emoji o'rniga): har telefonda bir xil ko'rinadi */
+  .ic { width: 18px; height: 18px; flex: none; vertical-align: -4px; }
+  .icons .ic { width: 16px; height: 16px; color: var(--green); }
+  /* Qidiruv */
+  .search { position: relative; margin-top: 14px; }
+  .search > .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--hint); pointer-events: none; }
+  .search input { padding: 11px 42px 11px 40px; border-radius: 12px; -webkit-appearance: none; appearance: none; }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .search .clr { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border: 0;
+    background: none; color: var(--hint); display: none; align-items: center; justify-content: center; }
+  .search.has .clr { display: flex; }
+  .found { font-size: 13px; color: var(--hint); margin: 0 2px 8px; }
+  /* Yuklanish skeleti */
+  .sk { border-radius: 14px; background: linear-gradient(90deg, var(--card) 30%, rgba(128,128,128,.16) 50%, var(--card) 70%);
+    background-size: 220% 100%; animation: sk 1.3s linear infinite; }
+  @keyframes sk { from { background-position: 110% 0; } to { background-position: -110% 0; } }
+  /* Bo'sh holat */
+  .empty-st { text-align: center; padding: 30px 18px; background: var(--card); border-radius: 18px; margin-top: 14px; }
+  .empty-st > .ic { width: 42px; height: 42px; color: var(--green); }
+  .empty-st h3 { margin: 10px 0 6px; font-size: 17px; }
+  .empty-st .btn { width: auto; display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; }
+  @media (prefers-reduced-motion: reduce) { .sk { animation: none; } .ab, .card { transition: none; } }
   .summary { background: var(--g-main); color: #fff; border-radius: 20px; padding: 18px; margin-bottom: 12px;
     box-shadow: 0 8px 22px rgba(4,120,87,.35); position: relative; overflow: hidden; }
   .summary::after { content: ""; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%;
@@ -68,12 +90,27 @@
   .tabs { display: flex; gap: 6px; margin: 14px 0 10px; }
   .tabs button { flex: 1; padding: 10px 4px; border: 0; border-radius: 12px; background: var(--card); color: var(--text); font-size: 14px; font-weight: 500; }
   .tabs button.on { background: var(--g-main); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(4,120,87,.35); }
+  .tabs .cnt { display: inline-block; min-width: 20px; padding: 1px 6px; margin-left: 5px; border-radius: 10px; font-size: 12px;
+    font-weight: 700; background: rgba(128,128,128,.2); font-variant-numeric: tabular-nums; }
+  .tabs button.on .cnt { background: rgba(255,255,255,.25); }
+  .tabs .cnt.red { background: var(--red); color: #fff; }
   .card { background: var(--card); border-radius: 16px; padding: 13px 14px; margin-bottom: 10px; cursor: pointer;
     border-left: 5px solid var(--green); display: flex; gap: 12px; align-items: flex-start; transition: transform .1s; }
   .card:active { transform: scale(.98); }
-  .card.late { border-left-color: var(--red); background: linear-gradient(90deg, rgba(240,69,90,.10), var(--card) 60%); }
+  .card.late { border-left-color: var(--red); }
   .card.done { border-left-color: #8a8a8f; opacity: .85; }
   .card .body { flex: 1; min-width: 0; }
+  /* Kartochka: asosiysi — qolgan qarz va keyingi to'lov; qolgani xira */
+  .card .sub { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--hint); margin-top: 3px; }
+  .card .prod { display: flex; align-items: center; gap: 5px; min-width: 0; }
+  .card .prod span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card .sub .ic, .card .meta .ic { width: 15px; height: 15px; vertical-align: 0; }
+  .card .bar { height: 6px; }
+  .card .foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-top: 9px; }
+  .card .meta { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--hint); min-width: 0; }
+  .card .rem { text-align: right; flex: none; line-height: 1.15; }
+  .card .rem b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .card .rem small { font-size: 11px; color: var(--hint); }
   .avatar { width: 42px; height: 42px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 16px; display: flex;
     align-items: center; justify-content: center; flex: none; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
   .card .name { font-weight: 700; font-size: 16px; }
@@ -85,8 +122,10 @@
   .empty { text-align: center; color: var(--hint); padding: 40px 10px; }
   /* Ixcham dumaloq tugma: mijoz kartalarining matnini to'smaydi */
   .fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); width: 56px; height: 56px; padding: 0;
-    border: 0; border-radius: 50%; background: var(--g-warm); color: #10261d; font-size: 30px; font-weight: 600; line-height: 56px;
+    border: 0; border-radius: 50%; background: var(--g-warm); color: #10261d; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 8px 20px rgba(180,137,47,.45); z-index: 5; }
+  .fab[hidden] { display: none; }
+  .fab .ic { width: 26px; height: 26px; }
   .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: flex-end; z-index: 10; }
   .overlay.show { display: flex; }
   .sheet { background: var(--bg); width: 100%; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 18px 16px 28px; }
@@ -134,9 +173,17 @@
 </style>
 </head>
 <body>
-<div id="app"><div class="empty">Yuklanmoqda…</div></div>
+<div id="app" aria-busy="true" aria-label="Yuklanmoqda">
+  <div class="sk" style="height:26px;width:55%"></div>
+  <div class="sk" style="height:13px;width:22%;margin-top:9px"></div>
+  <div class="sk" style="height:250px;margin-top:18px;border-radius:22px"></div>
+  <div class="sk" style="height:44px;margin-top:14px"></div>
+  <div class="sk" style="height:42px;margin-top:10px"></div>
+  <div class="sk" style="height:100px;margin-top:10px;border-radius:16px"></div>
+  <div class="sk" style="height:100px;margin-top:10px;border-radius:16px"></div>
+</div>
 <div class="muted" style="text-align:center;margin-top:28px"><a class="tel" href="/privacy.html">Maxfiylik</a> · <a class="tel" href="/terms.html">Shartlar</a></div>
-<button class="fab" id="fab" hidden aria-label="Mijoz qo'shish" title="Mijoz qo'shish">＋</button>
+<button class="fab" id="fab" hidden aria-label="Mijoz qo'shish" title="Mijoz qo'shish"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
 <div class="overlay" id="ov"><div class="sheet" id="sheet"></div></div>
 
 <script>
@@ -154,7 +201,23 @@ const confirmMsg = (m) => new Promise((r) => { try { tg.showConfirm(m, (ok) => r
 const haptic = (t) => { try { tg.HapticFeedback?.notificationOccurred(t); } catch {} };
 const ST = { paid: "✅ To'landi", late: "⚠️ Kechikdi", partial: "🟡 Qisman", pending: "🕒 Kutilmoqda" };
 
-let data = { role: "", debtors: [] }, tab = "all", openId = null;
+let data = { role: "", debtors: [] }, tab = "all", openId = null, q = "";
+
+// Chiziqli ikonlar (Lucide uslubida, ISC litsenziya): emoji o'rniga, har telefonda bir xil
+const ICONS = {
+  sheet: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h2M14 13h2M8 17h2M14 17h2"/>',
+  msg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M7 8h10M7 12h6"/>',
+  card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3v3a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+};
+const ic = (n) => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
 async function api(path, method = "GET", body) {
   if (data.demo && path !== "/debtors") {
@@ -173,6 +236,7 @@ async function load() {
   try { data = await api("/debtors"); render(); if (openId) showDetail(openId); }
   catch (e) {
     $("fab").hidden = true;
+    $("app").removeAttribute("aria-busy");
     $("app").innerHTML = `<div class="empty"><h2>${e.status === 403 ? "⛔ Ruxsat yo'q" : "Kirib bo'lmadi"}</h2>${esc(e.message)}</div>`;
   }
 }
@@ -182,20 +246,50 @@ const isOwner = () => data.role === "owner";
 // ---------- ro'yxat ----------
 function render() {
   $("fab").hidden = !isOwner();
+  $("app").removeAttribute("aria-busy");
   if (!isOwner()) return renderCustomer();
 
-  const sums = `<div class="abwrap"><div class="ab" id="ab" data-act="flip">${abInner()}</div></div>`;
+  const demo = data.demo ? `<div class="summary" style="border:1px dashed var(--green)"><b>👀 Namuna rejim</b><div class="muted">Bu yerdagi mijozlar soxta. Panel qanday ishlashini ko'rishingiz mumkin, lekin o'zgarishlar saqlanmaydi.</div></div>` : "";
+  const head = `<div class="top head"><div><h2>Qarz nazorati</h2><div class="muted">${data.debtors.length} ta mijoz</div></div>
+      <div class="icons"><button data-act="excel">${ic("sheet")}Excel</button><button data-act="tpl">${ic("msg")}Matn</button><button data-act="cards">${ic("card")}Karta</button></div></div>`;
 
-  const list = data.debtors.filter((d) => tab === "all" ? !d.c.done : tab === "late" ? d.c.overdue > 0 : d.c.done)
+  // Hali mijoz yo'q: birinchi qadamni ko'rsatamiz
+  if (!data.debtors.length) {
+    $("app").innerHTML = `${demo}${head}<div class="empty-st">${ic("users")}<h3>Hali mijoz yo'q</h3>
+      <div class="muted">Birinchi mijozni qo'shing — to'lov jadvali va eslatmalar avtomatik tuziladi.</div>
+      <button class="btn" data-act="addfirst">${ic("plus")}Birinchi mijozni qo'shish</button></div>`;
+    return;
+  }
+
+  $("app").innerHTML = `${demo}${head}
+    <div style="margin-top:12px"><div class="abwrap"><div class="ab" id="ab" data-act="flip">${abInner()}</div></div></div>
+    <div class="search${q ? " has" : ""}">${ic("search")}<input id="q" type="search" enterkeyhint="search" autocomplete="off"
+      placeholder="Ism, mahsulot yoki telefon" aria-label="Mijozni qidirish" value="${esc(q)}">
+      <button class="clr" data-act="clearq" aria-label="Qidiruvni tozalash">${ic("x")}</button></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="list"></div>`;
+  renderList();
+}
+
+const norm = (s) => String(s ?? "").toLowerCase().replace(/[‘’ʻʼ`´]/g, "'");
+const matches = (d, qq) => {
+  if (norm([d.name, d.product, d.code, d.note].join(" ")).includes(qq)) return true;
+  const dig = qq.replace(/\D/g, "");
+  return dig.length >= 3 && String(d.phone ?? "").replace(/\D/g, "").includes(dig);
+};
+
+// Sekmalar (soni bilan) va ro'yxat. Qidiruvda hamma mijozlar orasidan izlanadi.
+function renderList() {
+  const cnt = { all: 0, late: 0, done: 0 };
+  for (const d of data.debtors) { if (d.c.done) cnt.done++; else cnt.all++; if (d.c.overdue > 0) cnt.late++; }
+  const qq = norm(q.trim());
+  $("tabs").innerHTML = [["all", "Faol"], ["late", "Kechikkan"], ["done", "Tugagan"]].map(([k, v]) =>
+    `<button data-tab="${k}" class="${!qq && tab === k ? "on" : ""}">${v}<span class="cnt${k === "late" && cnt.late ? " red" : ""}">${cnt[k]}</span></button>`).join("");
+  const list = data.debtors.filter((d) => qq ? matches(d, qq) : tab === "all" ? !d.c.done : tab === "late" ? d.c.overdue > 0 : d.c.done)
     .sort((a, b) => b.c.overdue - a.c.overdue || b.c.remaining - a.c.remaining);
-
-  $("app").innerHTML = `
-    ${data.demo ? `<div class="summary" style="border:1px dashed var(--green)"><b>👀 Namuna rejim</b><div class="muted">Bu yerdagi mijozlar soxta. Panel qanday ishlashini ko'rishingiz mumkin, lekin o'zgarishlar saqlanmaydi.</div></div>` : ""}
-    <div class="top head"><div><h2>💼 Qarz nazorati</h2><div class="muted">${data.debtors.length} ta mijoz</div></div>
-      <div class="icons"><button data-act="excel">📥 Excel</button><button data-act="tpl">✉️ Matn</button><button data-act="cards">💳 Karta</button></div></div>
-    <div style="margin-top:12px">${sums}</div>
-    <div class="tabs">${[["all", "Faol"], ["late", "Kechikkan"], ["done", "Tugagan"]].map(([k, v]) => `<button data-tab="${k}" class="${tab === k ? "on" : ""}">${v}</button>`).join("")}</div>
-    ${list.map(card).join("") || '<div class="empty">Bu ro\'yxatda hech kim yo\'q</div>'}`;
+  const emptyTxt = qq ? `“${esc(q.trim())}” bo'yicha hech kim topilmadi` : tab === "late" ? "Kechikkan mijoz yo'q 🎉" : "Bu ro'yxatda hech kim yo'q";
+  $("list").innerHTML = (qq && list.length ? `<div class="found">${list.length} ta natija</div>` : "") +
+    (list.map(card).join("") || `<div class="empty">${emptyTxt}</div>`);
 }
 
 // ---------- aborot kartasi ----------
@@ -235,7 +329,7 @@ function abInner() {
     <div class="pl"><span>Bu oy yig'ildi</span><b>${pct}%</b></div>
     <div class="pbar"><i style="width:${pct}%"></i></div>
     <div class="late">Oldingi oylardan kechikkan: ${fmt(s.late, s.cur)}</div>
-    <div class="ft"><span>💰 Jami qolgan qarz<small>${title}${s.other ? " · faqat " + s.cur : ""}</small></span><b>${fmt(s.rem, s.cur)}</b></div>`;
+    <div class="ft"><span>${ic("wallet")} Jami qolgan qarz<small>${title}${s.other ? " · faqat " + s.cur : ""}</small></span><b>${fmt(s.rem, s.cur)}</b></div>`;
 }
 
 // Bosilganda karta 90° aylanadi, ichi almashadi, orqa tomondan qaytadi
@@ -259,10 +353,13 @@ function card(d) {
     <div class="avatar" style="background:${avatarBg(d.name)}">${esc(initials(d.name))}</div>
     <div class="body">
       <div class="top"><span class="name">${esc(d.name)}</span>${badge}</div>
-      ${d.product ? `<div class="muted">📦 ${esc(d.product)}${d.qty > 1 ? " × " + d.qty : ""}</div>` : ""}
-      <div class="row"><span>📆 Oylar <b>${c.paidMonths}/${d.months}</b></span><span>💳 Qolgan <b>${fmt(c.remaining, d.currency)}</b></span></div>
+      <div class="sub"><span class="prod">${d.product ? `${ic("box")}<span>${esc(d.product)}${d.qty > 1 ? " × " + d.qty : ""}</span>` : ""}</span>
+        <span>${c.paidMonths}/${d.months} oy</span></div>
       <div class="bar"><i style="width:${c.percent}%"></i></div>
-      ${c.done ? "" : `<div class="row"><span>⏰ ${fdate(c.nextDue)}</span><span>💸 ${fmt(d.monthly, d.currency)}/oy</span></div>`}
+      <div class="foot">${c.done
+        ? `<span class="meta">${ic("check")} To'liq to'landi</span>`
+        : `<span class="meta">${ic("cal")} ${fdate(c.nextDue)} · ${fmt(d.monthly, d.currency)}/oy</span>
+           <span class="rem"><b>${fmt(c.remaining, d.currency)}</b><small>qoldi</small></span>`}</div>
     </div>
   </div>`;
 }
@@ -502,7 +599,11 @@ document.addEventListener("click", async (e) => {
   if (t.id === "fab") { firstTouched = false; return showAdd(); }
   if (t.dataset.row) return showRowEdit(Number(t.dataset.row));
   if (t.dataset.pay) return showPayEdit(t.dataset.pay);
-  if (t.dataset.tab) { tab = t.dataset.tab; return render(); }
+  if (t.dataset.tab) {
+    tab = t.dataset.tab;
+    if (q) { q = ""; $("q").value = ""; $("q").parentElement.classList.remove("has"); }
+    return renderList();
+  }
   if (t.classList.contains("card")) return showDetail(t.dataset.id);
   if (t.dataset.fill) return ($("payAmt").value = t.dataset.fill);
   if (t.dataset.preset) {
@@ -537,6 +638,8 @@ document.addEventListener("click", async (e) => {
   }, t);
   switch (t.dataset.act) {
     case "close": return closeSheet();
+    case "addfirst": firstTouched = false; return showAdd();
+    case "clearq": q = ""; $("q").value = ""; t.parentElement.classList.remove("has"); renderList(); return $("q").focus();
     case "back": return showDetail(openId);
     case "excel": return run(async () => { await api("/export", "POST"); alertMsg("Excel fayl Telegram chatingizga yuborildi 📥"); }, t);
     case "saverow": return run(async () => {
@@ -602,6 +705,7 @@ function pm(raw) {
 
 let firstTouched = false;
 document.addEventListener("input", (e) => {
+  if (e.target.id === "q") { q = e.target.value; e.target.parentElement.classList.toggle("has", !!q); return renderList(); }
   if (e.target.id === "aFirst") firstTouched = true;
   if (e.target.id === "aSale" && !firstTouched && e.target.value) $("aFirst").value = plusMonth(e.target.value);
   if (e.target.id === "cNum") e.target.value = fcard(e.target.value.replace(/\D/g, "").slice(0, 19));
