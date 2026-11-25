@@ -142,7 +142,7 @@ bot.command("meniochir", async (ctx) => {
 });
 
 // ---------- mijozlar ----------
-bot.command("yangi", admin(priv(async (ctx) => {
+bot.command("yangi", admin(async (ctx) => {
   const t = ctx.match.trim().split(/\s+/).filter(Boolean);
   const i = t.findIndex((x) => /^\d/.test(x));
   if (i < 1 || t.length < i + 2)
@@ -157,9 +157,9 @@ bot.command("yangi", admin(priv(async (ctx) => {
     currency, firstDue, chatId: isPrivate(ctx) ? null : ctx.chat.id,
   });
   await ctx.reply(`➕ Qo'shildi\n\n${cardText(d, { owner: true })}\n\n🔗 Mijoz uchun havola (bosganda unga xabar yuborish mumkin bo'ladi):\n${inviteLink(ctx, d)}`, HTML);
-})));
+}));
 
-bot.command("royxat", admin(priv(async (ctx) => {
+bot.command("royxat", admin(async (ctx) => {
   const list = (await listDebtors()).map((d) => ({ d, c: calc(d) })).sort((a, b) => b.c.overdue - a.c.overdue || b.c.remaining - a.c.remaining);
   if (!list.length) return ctx.reply("Hali hech kim yo'q. /panel orqali qo'shing.");
   const lines = list.map(({ d, c }) =>
@@ -168,11 +168,11 @@ bot.command("royxat", admin(priv(async (ctx) => {
   for (const { d, c } of list) { sums[d.currency] ??= { rem: 0, paid: 0 }; sums[d.currency].rem += c.remaining; sums[d.currency].paid += c.paid; }
   const total = Object.entries(sums).map(([cur, s]) => `Yig'ilgan: ${fmt(s.paid, cur)} · Qolgan: <b>${fmt(s.rem, cur)}</b>`).join("\n");
   await ctx.reply(`${lines.join("\n")}\n\n${total}`.slice(0, 4000), HTML);
-})));
+}));
 
-bot.command("qarz", admin(priv(async (ctx) => {
+bot.command("qarz", admin(async (ctx) => {
   await ctx.reply(cardText(await pickDebtor(ctx.match), { owner: true }), HTML);
-})));
+}));
 
 bot.command("tolov", admin(async (ctx) => {
   const t = ctx.match.trim().split(/\s+/).filter(Boolean);
@@ -183,10 +183,10 @@ bot.command("tolov", admin(async (ctx) => {
   await recordPayment(ctx, await pickDebtor(t.slice(0, two ? -2 : -1).join(" ")), amount);
 }));
 
-bot.command("havola", admin(priv(async (ctx) => {
+bot.command("havola", admin(async (ctx) => {
   const d = await pickDebtor(ctx.match);
   await ctx.reply(`${esc(d.name)} uchun havola:\n${inviteLink(ctx, d)}\n\n${d.tgId ? "✅ Ulangan" : "⏳ Hali ulanmagan"}`, HTML);
-})));
+}));
 
 bot.command("eslat", admin(async (ctx) => {
   const arg = ctx.match.trim();
@@ -207,10 +207,10 @@ bot.command("eslat", admin(async (ctx) => {
   await ctx.reply((ok.length ? `📨 Yuborildi: ${ok.join(", ")}\n` : "") + (fail.length ? `❌ Yetmadi: ${fail.join("; ")}` : ""));
 }));
 
-bot.command("excel", admin(priv(async (ctx) => {
+bot.command("excel", admin(async (ctx) => {
   const buf = await buildWorkbook(await listDebtors());
   await ctx.replyWithDocument(new InputFile(Buffer.from(buf), "qarzlar.xlsx"), { caption: "📥 Hamma mijozlar, to'lovlar va jadval" });
-})));
+}));
 
 bot.command("ochir", admin(async (ctx) => {
   const d = await pickDebtor(ctx.match);
