@@ -142,6 +142,10 @@
     box-shadow: 0 6px 16px rgba(4,120,87,.35); }
   .btn.sec { background: var(--card); color: var(--text); font-weight: 500; margin-top: 8px; box-shadow: none; }
   .btn.danger { color: var(--red); }
+  details.more { margin-top: 12px; }
+  details.more summary { color: var(--btn); font-size: 14px; cursor: pointer; padding: 6px 0; }
+  .info { margin-top: 10px; background: var(--card); border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.5; }
+  .info:empty { display: none; }
   .chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
   .chip { padding: 7px 12px; border-radius: 20px; background: var(--card); border: 0; color: var(--text); font-size: 13px; }
   .stat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
@@ -408,12 +412,19 @@ function scheduleHtml(d, editable = false) {
     const moved = r.n > 0 && d.overrides && d.overrides[r.n];
     const paid = r.paidOn
       ? `<div class="muted">✅ To'langan: <b>${fdate(r.paidOn)}</b> · ${deltaText(r.delta)}</div>`
-      : r.status === "partial" ? `<div class="muted">🟡 ${fmt(r.paidAmt, d.currency)} to'langan</div>` : "";
+      : r.paidAmt > 0 ? `<div class="muted">🟡 ${fmt(r.paidAmt, d.currency)} to'langan · <b style="color:var(--red)">${fmt(r.amount - r.paidAmt, d.currency)} yetmaydi</b></div>` : "";
     return `<div class="line" ${editable && r.n > 0 ? `data-row="${r.n}" style="cursor:pointer"` : ""}>
       <div><b>${r.n === 0 ? "Oldindan" : r.n + "-oy"}</b> · to'lash kerak: <b>${fdate(r.due)}</b>${moved ? " ✏️" : ""}
         <div class="muted">${fmt(r.amount, d.currency)}</div>${paid}</div>
       <span class="st ${r.status}">${ST[r.status]}</span></div>`;
   }).join("");
+}
+
+// To'lovdan keyin: nechta oy yopildi; to'lov oyni to'liq yopmasa qaysi oyga qancha yetmasligi
+function showPaySummary(x) {
+  if (!x) return;
+  alertMsg(`✅ Saqlandi\n${x.paidMonths}/${x.months} oy to'langan · qolgan ${x.remaining}` + (x.done ? "\n🎉 Qarz yopildi" : "") +
+    (x.gap ? `\n\n⚠️ ${x.gap.n}-oy uchun ${x.gap.missing} yetmaydi. To'lovlar eng eski oydan boshlab yopiladi, shuning uchun bu oy hali to'liq emas.` : ""));
 }
 
 // ---------- oynalar ----------
@@ -427,7 +438,7 @@ function showDetail(id) {
   const c = d.c;
   sheet(`
     <div class="head"><div><h2>${esc(d.name)}</h2>
-      <div class="muted">${d.product ? esc(d.product) + (d.qty > 1 ? " × " + d.qty : "") + " · " : ""}Sotilgan ${fdate(d.saleDate)}</div>
+      <div class="muted">${d.product ? esc(d.product) + (d.qty > 1 ? " × " + d.qty : "") + " · " : ""}Sotilgan ${fdate(d.saleDate)}${d.addedBy ? ` · 👤 ${esc(d.addedBy)} qo'shgan` : ""}</div>
       ${d.phone ? `<div class="muted"><a class="tel" href="tel:${esc(d.phone)}">${esc(d.phone)}</a></div>` : ""}
       ${d.code ? `<div class="muted">ID: ${esc(d.code)}</div>` : ""}</div>
       <button class="x" data-act="close">✕</button></div>
@@ -447,6 +458,7 @@ function showDetail(id) {
     <div class="two"><input id="payAmt" type="text" inputmode="text" autocomplete="off" placeholder="${d.monthly}">
       <input id="payDate" type="date" value="${today()}" max="${today()}"></div>
     <div class="chips">
+      ${c.overdue > 0 && c.overdue !== d.monthly ? `<button class="chip" data-fill="${c.overdue}" style="color:var(--red)">Kechikkan (${fmt(c.overdue, d.currency)})</button>` : ""}
       <button class="chip" data-fill="${Math.min(d.monthly, c.remaining)}">1 oylik (${fmt(Math.min(d.monthly, c.remaining), d.currency)})</button>
       <button class="chip" data-fill="${c.remaining}">Hammasi</button>
     </div>
@@ -456,11 +468,26 @@ function showDetail(id) {
     ${d.linked ? '<button class="btn sec" data-act="relink">♻️ Havolani yangilash (eski ulanishni uzadi)</button>' : ""}
     <h4>To'lovlar jadvali</h4><div class="muted">Oyni bossangiz, to'lash sanasini o'zgartira olasiz.</div>${scheduleHtml(d, true)}
     <h4>To'lov tarixi</h4><div class="muted">To'lovni bossangiz, summa yoki sanani tuzatish mumkin.</div>
-    ${d.payments.map((p) => `<div class="line" data-pay="${esc(p.id)}" style="cursor:pointer"><div><b>${fmt(p.amount, d.currency)}</b><div class="muted">${fiso(p.date)}${p.note ? " · " + esc(p.note) : ""} ✏️</div></div>
+    ${d.payments.map((p) => `<div class="line" data-pay="${esc(p.id)}" style="cursor:pointer"><div><b>${fmt(p.amount, d.currency)}</b><div class="muted">${fiso(p.date)}${p.byName ? " · 👤 " + esc(p.byName) : ""}${p.note ? " · " + esc(p.note) : ""} ✏️</div></div>
       <button data-undo="${esc(p.id)}" title="Bekor qilish">↩️</button></div>`).join("") || '<div class="muted">Hali to\'lov yo\'q</div>'}
     ${d.excuses.length ? `<h4>Mijoz yozganlari</h4>${d.excuses.map((x) => `<div class="note"><span class="muted">${fiso(x.date)}</span><br>${esc(x.text)}</div>`).join("")}` : ""}
     ${d.messages.length ? `<h4>Yuborilgan xabarlar</h4>${d.messages.map((m) => `<div class="line"><div class="muted">${fiso(m.date)} · ${m.via === "dm" ? "shaxsiy chat" : "guruh"}</div></div>`).join("")}` : ""}
-    <button class="btn sec danger" data-act="del" style="margin-top:20px">🗑 Mijozni o'chirish</button>`);
+    ${d.history && d.history.length ? `<h4>O'zgarishlar tarixi</h4>${d.history.map((h) => `<div class="line"><div><div class="muted">${fiso(h.date)}${h.byName ? " · 👤 <b>" + esc(h.byName) + "</b>" : ""}</div>${esc(h.text)}</div></div>`).join("")}` : ""}
+    <button class="btn sec" data-act="edit" style="margin-top:20px">✏️ Ism va ma'lumotni tahrirlash</button>
+    <button class="btn sec danger" data-act="del">🗑 Mijozni o'chirish</button>`);
+}
+
+function showEdit() {
+  const d = data.debtors.find((x) => x.id === openId);
+  if (!d) return closeSheet();
+  sheet(`
+    <div class="head"><h2>Tahrirlash</h2><button class="x" data-act="back">✕</button></div>
+    <label>Mijoz ismi</label><input id="eName" maxlength="60" value="${esc(d.name)}">
+    <label>Mahsulot</label><input id="eProduct" maxlength="80" value="${esc(d.product)}">
+    <div class="two"><div><label>Telefon</label><input id="ePhone" type="tel" value="${esc(d.phone)}"></div>
+      <div><label>ID</label><input id="eCode" maxlength="30" value="${esc(d.code)}"></div></div>
+    <label>Izoh (faqat sizga ko'rinadi)</label><input id="eNote" maxlength="200" value="${esc(d.note)}">
+    <button class="btn" data-act="saveedit">Saqlash</button>`);
 }
 
 function showMsg() {
@@ -559,24 +586,28 @@ function showCards() {
 }
 
 function showAdd() {
+  totalTouched = false;
   sheet(`
     <div class="head"><h2>Yangi mijoz</h2><button class="x" data-act="close">✕</button></div>
     <label>Mijoz ismi</label><input id="aName" maxlength="60" placeholder="Mijozning ismi">
-    <div class="two"><div><label>Telefon</label><input id="aPhone" type="tel" placeholder="Telefon raqami"></div>
-      <div><label>ID (ixtiyoriy)</label><input id="aCode" maxlength="30" placeholder="ID raqami"></div></div>
-    <label>Mahsulot (soni bilan)</label><input id="aProduct" maxlength="80" placeholder="Masalan: 2 ta iPhone 15">
-    <div class="two"><div><label>Xarid narxi (jami)</label><input id="aBuy" type="text" inputmode="text" autocomplete="off" placeholder="12 mln ham bo'ladi"></div>
-      <div><label>Sotuv narxi (jami)</label><input id="aTotal" type="text" inputmode="text" autocomplete="off" placeholder="Sotuv summasi"></div></div>
-    <div class="two"><div><label>Oldindan to'lov</label><input id="aDown" type="text" inputmode="text" autocomplete="off" placeholder="0"></div>
+    <label>Mahsulot</label><input id="aProduct" maxlength="80" placeholder="Masalan: iPhone 15">
+    <div class="two"><div><label>Xarid narxi</label><input id="aBuy" type="text" inputmode="decimal" autocomplete="off" placeholder="12 mln ham bo'ladi"></div>
+      <div><label>Oldindan to'lov</label><input id="aDown" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></div></div>
+    <div class="two"><div><label>Foiz % (qolganiga)</label><input id="aPct" type="text" inputmode="decimal" autocomplete="off" placeholder="Masalan: 30"></div>
       <div><label>Necha oyga</label><input id="aMonths" type="number" inputmode="numeric" min="1" max="120" placeholder="Masalan: 6"></div></div>
-    <div class="two"><div><label>Sotilgan sana</label><input id="aSale" type="date" value="${today()}"></div>
-      <div><label>1-to'lov sanasi</label><input id="aFirst" type="date" value="${plusMonth(today())}"></div></div>
-    <label>Aborot</label>
-    <select id="aPool"><option value="">— tanlanmagan —</option><option value="T">T-aborot</option><option value="C">C-aborot</option></select>
-    <label>Valyuta</label>
-    <select id="aCur"><option value="USD">Dollar ($)</option><option value="EUR">Yevro (€)</option><option value="TRY">Lira (₺)</option><option value="UZS">So'm</option></select>
-    <label>Izoh (ixtiyoriy, faqat sizga ko'rinadi)</label><input id="aNote" maxlength="200" placeholder="Masalan: kafil — akasi, oylikdan keyin to'laydi">
-    <div class="muted" id="aInfo" style="margin-top:8px"></div>
+    <div class="chips">${[20, 25, 30, 40, 50].map((x) => `<button class="chip" data-pct="${x}">${x}%</button>`).join("")}</div>
+    <div class="chips">${[3, 6, 9, 12].map((x) => `<button class="chip" data-months="${x}">${x} oy</button>`).join("")}</div>
+    <label>Sotuv narxi (jami)</label><input id="aTotal" type="text" inputmode="decimal" autocomplete="off" placeholder="Foiz bilan o'zi hisoblanadi">
+    <div class="two"><div><label>1-to'lov sanasi</label><input id="aFirst" type="date" value="${plusMonth(today())}"></div>
+      <div><label>Valyuta</label><select id="aCur"><option value="USD">Dollar ($)</option><option value="EUR">Yevro (€)</option><option value="TRY">Lira (₺)</option><option value="UZS">So'm</option></select></div></div>
+    <details class="more"><summary>➕ Qo'shimcha (telefon, ID, sana, izoh)</summary>
+      <div class="two"><div><label>Telefon</label><input id="aPhone" type="tel" placeholder="Telefon raqami"></div>
+        <div><label>ID (ixtiyoriy)</label><input id="aCode" maxlength="30" placeholder="ID raqami"></div></div>
+      <div class="two"><div><label>Sotilgan sana</label><input id="aSale" type="date" value="${today()}"></div>
+        <div><label>Aborot</label><select id="aPool"><option value="">— yo'q —</option><option value="T">T-aborot</option><option value="C">C-aborot</option></select></div></div>
+      <label>Izoh (faqat sizga ko'rinadi)</label><input id="aNote" maxlength="200" placeholder="Masalan: kafil — akasi">
+    </details>
+    <div class="info" id="aInfo"></div>
     <button class="btn" data-act="add">Qo'shish</button>`);
 }
 
@@ -606,6 +637,12 @@ document.addEventListener("click", async (e) => {
   }
   if (t.classList.contains("card")) return showDetail(t.dataset.id);
   if (t.dataset.fill) return ($("payAmt").value = t.dataset.fill);
+  if (t.dataset.pct || t.dataset.months) {
+    const box = $(t.dataset.pct ? "aPct" : "aMonths");
+    box.value = t.dataset.pct || t.dataset.months;
+    if (t.dataset.pct) totalTouched = false;
+    return box.dispatchEvent(new Event("input", { bubbles: true }));
+  }
   if (t.dataset.preset) {
     const p = data.presets[Number(t.dataset.preset)], box = $("msgText") || $("tplText");
     const d = $("msgText") ? data.debtors.find((x) => x.id === openId) : null;
@@ -641,7 +678,7 @@ document.addEventListener("click", async (e) => {
     case "addfirst": firstTouched = false; return showAdd();
     case "clearq": q = ""; $("q").value = ""; t.parentElement.classList.remove("has"); renderList(); return $("q").focus();
     case "back": return showDetail(openId);
-    case "excel": return run(async () => { await api("/export", "POST"); alertMsg("Excel fayl Telegram chatingizga yuborildi 📥"); }, t);
+    case "excel": return run(async () => { const r = await api("/export", "POST"); alertMsg(r.to === "group" ? "Excel fayl guruhga yuborildi 📥" : "Excel fayl Telegram chatingizga yuborildi 📥"); }, t);
     case "saverow": return run(async () => {
       await api("/schedule", "POST", { id: openId, n: t.dataset.n, date: $("rowDate").value }); await load();
     }, t);
@@ -661,9 +698,16 @@ document.addEventListener("click", async (e) => {
     case "savetpl": return run(async () => { await api("/settings", "POST", { template: $("tplText").value }); closeSheet(); await load(); }, t);
     case "restpl": return run(async () => { await api("/settings", "POST", { template: "" }); closeSheet(); await load(); }, t);
     case "pay": return run(async () => {
-      await api("/pay", "POST", { id: openId, amount: $("payAmt").value, date: $("payDate").value }); await load();
+      const r = await api("/pay", "POST", { id: openId, amount: $("payAmt").value, date: $("payDate").value }); await load();
+      showPaySummary(r.summary);
     }, t);
     case "msg": return showMsg();
+    case "edit": return showEdit();
+    case "saveedit": return run(async () => {
+      await api("/debtors", "PUT", { id: openId, name: $("eName").value, product: $("eProduct").value,
+        phone: $("ePhone").value, code: $("eCode").value, note: $("eNote").value });
+      await load();
+    }, t);
     case "send": return run(async () => {
       await api("/remind", "POST", { id: openId, text: $("msgText").value });
       await load(); alertMsg("Xabar yuborildi ✅ (nusxasi sizning chatingizga ham keldi)");
@@ -703,22 +747,28 @@ function pm(raw) {
   return Math.round(Number(s) * mult * 100) / 100;
 }
 
-let firstTouched = false;
+let firstTouched = false, totalTouched = false;
 document.addEventListener("input", (e) => {
-  if (e.target.id === "q") { q = e.target.value; e.target.parentElement.classList.toggle("has", !!q); return renderList(); }
-  if (e.target.id === "aFirst") firstTouched = true;
-  if (e.target.id === "aSale" && !firstTouched && e.target.value) $("aFirst").value = plusMonth(e.target.value);
-  if (e.target.id === "cNum") e.target.value = fcard(e.target.value.replace(/\D/g, "").slice(0, 19));
+  const id = e.target.id;
+  if (id === "q") { q = e.target.value; e.target.parentElement.classList.toggle("has", !!q); return renderList(); }
+  if (id === "aFirst") firstTouched = true;
+  if (id === "aSale" && !firstTouched && e.target.value) $("aFirst").value = plusMonth(e.target.value);
+  if (id === "cNum") e.target.value = fcard(e.target.value.replace(/\D/g, "").slice(0, 19));
   const i = $("aInfo"); if (!i) return;
+  if (id === "aTotal") totalTouched = $("aTotal").value.trim() !== "";
+  if (id === "aPct") totalTouched = false;
   const cur = $("aCur").value, buyRaw = $("aBuy").value.trim(), downRaw = $("aDown").value.trim();
-  const tot = pm($("aTotal").value), down = downRaw ? pm(downRaw) : 0, m = Number($("aMonths").value), buy = buyRaw ? pm(buyRaw) : null;
+  const buy = buyRaw ? pm(buyRaw) : null, pct = parseFloat($("aPct").value.replace(",", "."));
+  const down = downRaw ? pm(downRaw) : 0, base = buy > 0 && down >= 0 && down < buy ? buy - down : null;
+  // Foiz oldindan to'lovdan keyin qolgan summaga qo'shiladi: sotuv = oldindan + (xarid − oldindan) × (1 + foiz).
+  // Sotuv narxi qo'lda yozilgan bo'lsa tegilmaydi.
+  if (!totalTouched && base && pct >= 0) $("aTotal").value = Math.round((down + base * (1 + pct / 100)) * 100) / 100;
+  const tot = pm($("aTotal").value), m = Number($("aMonths").value);
   const L = [];
-  if (buy > 0) L.push(`Xarid: ${fmt(buy, cur)}`);
-  if (tot > 0) L.push(`Sotuv: ${fmt(tot, cur)}`);
-  if (down > 0) L.push(`Oldindan: ${fmt(down, cur)}`);
-  if (tot > 0 && m > 0 && down >= 0 && down < tot) L.push(`Oylik: ${fmt((tot - down) / m, cur)}`);
-  if (tot > 0 && buy != null && !isNaN(buy)) L.push(`Foyda: ${fmt(tot - buy, cur)}`);
-  i.textContent = L.join(" · ");
+  if (tot > 0) L.push(`🧾 Sotuv: <b>${fmt(tot, cur)}</b>` + (base && tot > down ? ` (qolgan ${fmt(base, cur)} ga ${Math.round(((tot - down) / base - 1) * 1000) / 10}% ustama)` : ""));
+  if (tot > 0 && m > 0 && down >= 0 && down < tot) L.push(`📆 Oylik: <b>${fmt((tot - down) / m, cur)}</b> × ${m} oy` + (down > 0 ? ` · oldindan ${fmt(down, cur)}` : ""));
+  if (tot > 0 && buy > 0) L.push(`💰 Foyda: <b>${fmt(tot - buy, cur)}</b>`);
+  i.innerHTML = L.join("<br>");
 });
 
 load();

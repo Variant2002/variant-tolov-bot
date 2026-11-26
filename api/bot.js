@@ -1,7 +1,7 @@
-import { Bot, InlineKeyboard, InputFile, webhookCallback } from "grammy";
+import { Bot, InlineKeyboard, InputFile, Keyboard, webhookCallback } from "grammy";
 import {
   UserError, addExcuse, addPayment, calc, claimOwner, createClaim, createDebtor, deleteDebtor, findByInvite,
-  fmt, fmtDate, getDebtor, takeClaim, getHomeGroup, getOwner, isAuthorized, listDebtors, lockHomeGroup, normDate, saveDebtor, undoPayment,
+  addHistory, fmt, fmtDate, getDebtor, personName, rememberName, takeClaim, getHomeGroup, getOwner, isAuthorized, listDebtors, lockHomeGroup, normDate, saveDebtor, undoPayment,
 } from "../lib/core.js";
 import {
   cardText, cardsText, currencyToken, esc, findDebtor, findPayment, parseMoney, payKb, sendReminder, shortText,
@@ -71,8 +71,28 @@ const panelKb = (text = "📊 Panelni ochish") => new InlineKeyboard().webApp(te
 const customerKb = (d) => payKb(d).row().webApp("📊 Mening to'lovlarim", WEBAPP_URL);
 const inviteLink = (ctx, d) => `https://t.me/${ctx.me.username}?start=d_${d.inv ?? d.id}`;
 
+// Guruhdagi doimiy tugmalar (yozish maydoni ostida turadi)
+const BTN = { panel: "📊 Panel", royxat: "📋 Ro'yxat", mijoz: "🔎 Mijoz", tolov: "💵 To'lov", havola: "🔗 Havola", excel: "📥 Excel", yordam: "❓ Yordam" };
+const groupKb = new Keyboard()
+  .text(BTN.panel).text(BTN.royxat).row()
+  .text(BTN.mijoz).text(BTN.tolov).text(BTN.havola).row()
+  .text(BTN.excel).text(BTN.yordam)
+  .resized().persistent();
+const withKb = (ctx, other = {}) => (isPrivate(ctx) ? other : { ...other, reply_markup: groupKb });
+
+// Mijozni tanlash uchun tugmalar ro'yxati (Mijoz / Havola tugmalari uchun)
+async function pickerKb(act) {
+  const list = (await listDebtors()).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 90);
+  if (!list.length) return null;
+  const kb = new InlineKeyboard();
+  list.forEach((d, i) => { kb.text(d.name, `${act}:${d.id}`); if (i % 2) kb.row(); });
+  return kb;
+}
+
+const byName = (ctx) => personName(ctx.from) || "Noma'lum";
 const admin = (fn) => async (ctx) => {
   if (!ctx.from || !(await isAuthorized(ctx.from.id))) return ctx.reply("⛔ Bu buyruq faqat egasi va vakillar uchun.");
+  await rememberName(ctx.from.id, ctx.from);
   try { await fn(ctx); } catch (e) { await ctx.reply(errText(e)); if (!(e instanceof UserError)) console.error(e); }
 };
 
@@ -113,14 +133,16 @@ bot.command("guruh", async (ctx) => {
   if (isPrivate(ctx))
     return ctx.reply("Botni kerakli guruhga qo'shing (admin qilsangiz yaxshi) va o'sha guruhda /guruh deb yozing.\nBot faqat shu guruh bilan ishlaydi va keyin boshqa joyga ko'chirib bo'lmaydi.");
   const home = await getHomeGroup();
-  if (home) return ctx.reply(home === String(ctx.chat.id) ? "✅ Bot allaqachon shu guruhga biriktirilgan." : "⛔ Bot boshqa guruhga biriktirilgan, uni o'zgartirib bo'lmaydi.");
+  if (home) return home === String(ctx.chat.id)
+    ? ctx.reply("✅ Bot allaqachon shu guruhga biriktirilgan. Tugmalar pastda 👇", { reply_markup: groupKb })
+    : ctx.reply("⛔ Bot boshqa guruhga biriktirilgan, uni o'zgartirib bo'lmaydi.");
   await lockHomeGroup(ctx.chat.id);
-  await ctx.reply("🔒 Bot shu guruhga biriktirildi.\nEndi guruh a'zolari mijozlar, to'lovlar va xabarlar bilan ishlay oladi. Bot boshqa guruhlarda ishlamaydi.\n\nTavsiya: botni guruhda admin qiling, shunda a'zolarni to'g'ri tekshira oladi.");
+  await ctx.reply("🔒 Bot shu guruhga biriktirildi.\nEndi guruh a'zolari mijozlar, to'lovlar va xabarlar bilan ishlay oladi. Bot boshqa guruhlarda ishlamaydi.\n\nTavsiya: botni guruhda admin qiling, shunda a'zolarni to'g'ri tekshira oladi va tugmalar ishlaydi.", { reply_markup: groupKb });
 });
 
 // ---------- /start ----------
 bot.command("start", async (ctx) => {
-  if (!isPrivate(ctx)) return ctx.reply("Assalomu alaykum! Buyruqlar uchun /yordam");
+  if (!isPrivate(ctx)) return ctx.reply("Assalomu alaykum! Pastdagi tugmalardan foydalaning 👇", { reply_markup: groupKb });
   const payload = ctx.match;
 
   if (payload.startsWith("d_")) {
@@ -147,14 +169,18 @@ bot.command("start", async (ctx) => {
     mine.length ? { reply_markup: panelKb("📊 Mening to'lovlarim") } : undefined);
 });
 
-bot.command("yordam", (ctx) => ctx.reply(HELP, HTML));
+const showHelp = (ctx) => ctx.reply(HELP, withKb(ctx, HTML));
+bot.command("yordam", showHelp);
+bot.hears(BTN.yordam, showHelp);
 // Guruhda web_app tugma ishlamaydi (Telegram cheklovi) — o'rniga Direct Link Mini App (BotFather /newapp, qisqa nom APP_SHORT_NAME yoki "panel")
-bot.command("panel", admin(async (ctx) => {
+const openPanel = admin(async (ctx) => {
   const kb = isPrivate(ctx)
     ? panelKb()
     : new InlineKeyboard().url("📊 Panelni ochish", `https://t.me/${ctx.me.username}/${process.env.APP_SHORT_NAME || "panel"}`);
   await ctx.reply("Panel:", { reply_markup: kb });
-}));
+});
+bot.command("panel", openPanel);
+bot.hears(BTN.panel, openPanel);
 
 bot.command("qarzim", priv(async (ctx) => {
   const mine = (await listDebtors()).filter((d) => String(d.tgId) === String(ctx.from.id));
@@ -188,12 +214,12 @@ bot.command("yangi", admin(async (ctx) => {
   }
   const d = await createDebtor({
     name: t.slice(0, i).join(" "), total: parseMoney(t[i]), months: parseInt(t[i + 1], 10),
-    currency, firstDue, chatId: isPrivate(ctx) ? null : ctx.chat.id,
+    currency, firstDue, chatId: isPrivate(ctx) ? null : ctx.chat.id, by: ctx.from.id,
   });
-  await ctx.reply(`➕ Qo'shildi\n\n${cardText(d, { owner: true })}\n\n🔗 Mijoz uchun havola (bosganda unga xabar yuborish mumkin bo'ladi):\n${inviteLink(ctx, d)}`, HTML);
+  await ctx.reply(`➕ Qo'shildi · 👤 <b>${esc(byName(ctx))}</b>\n\n${cardText(d, { owner: true })}\n\n🔗 Mijoz uchun havola (bosganda unga xabar yuborish mumkin bo'ladi):\n${inviteLink(ctx, d)}`, HTML);
 }));
 
-bot.command("royxat", admin(async (ctx) => {
+const showList = admin(async (ctx) => {
   const list = (await listDebtors()).map((d) => ({ d, c: calc(d) })).sort((a, b) => b.c.overdue - a.c.overdue || b.c.remaining - a.c.remaining);
   if (!list.length) return ctx.reply("Hali hech kim yo'q. /panel orqali qo'shing.");
   const lines = list.map(({ d, c }) =>
@@ -202,7 +228,20 @@ bot.command("royxat", admin(async (ctx) => {
   for (const { d, c } of list) { sums[d.currency] ??= { rem: 0, paid: 0 }; sums[d.currency].rem += c.remaining; sums[d.currency].paid += c.paid; }
   const total = Object.entries(sums).map(([cur, s]) => `Yig'ilgan: ${fmt(s.paid, cur)} · Qolgan: <b>${fmt(s.rem, cur)}</b>`).join("\n");
   await ctx.reply(`${lines.join("\n")}\n\n${total}`.slice(0, 4000), HTML);
+});
+bot.command("royxat", showList);
+bot.hears(BTN.royxat, showList);
+
+bot.hears(BTN.mijoz, admin(async (ctx) => {
+  const kb = await pickerKb("card");
+  await ctx.reply(kb ? "🔎 Qaysi mijoz?" : "Hali hech kim yo'q. 📊 Panel orqali qo'shing.", kb ? { reply_markup: kb } : undefined);
 }));
+bot.hears(BTN.havola, admin(async (ctx) => {
+  const kb = await pickerKb("link");
+  await ctx.reply(kb ? "🔗 Kimning havolasi kerak?" : "Hali hech kim yo'q. 📊 Panel orqali qo'shing.", kb ? { reply_markup: kb } : undefined);
+}));
+bot.hears(BTN.tolov, admin((ctx) => ctx.reply(
+  "💵 <b>To'lov kiritish</b>\nShunchaki yozing: <i>Alidan 200 dollar oldim</i>\nyoki: <code>/tolov Ism Summa</code> (masalan: <code>/tolov Ali 850</code>)\n\nYoki 📊 Panel orqali.", HTML)));
 
 bot.command("qarz", admin(async (ctx) => {
   await ctx.reply(cardText(await pickDebtor(ctx.match), { owner: true }), HTML);
@@ -241,10 +280,12 @@ bot.command("eslat", admin(async (ctx) => {
   await ctx.reply((ok.length ? `📨 Yuborildi: ${ok.join(", ")}\n` : "") + (fail.length ? `❌ Yetmadi: ${fail.join("; ")}` : ""));
 }));
 
-bot.command("excel", admin(async (ctx) => {
+const sendExcel = admin(async (ctx) => {
   const buf = await buildWorkbook(await listDebtors());
   await ctx.replyWithDocument(new InputFile(Buffer.from(buf), "qarzlar.xlsx"), { caption: "📥 Hamma mijozlar, to'lovlar va jadval" });
-}));
+});
+bot.command("excel", sendExcel);
+bot.hears(BTN.excel, sendExcel);
 
 bot.command("ochir", admin(async (ctx) => {
   const d = await pickDebtor(ctx.match);
@@ -254,9 +295,10 @@ bot.command("ochir", admin(async (ctx) => {
 
 // ---------- to'lov kiritish ----------
 async function recordPayment(ctx, d, amount, note = "") {
+  await rememberName(ctx.from.id, ctx.from);
   const { debtor, payment } = await addPayment(d.id, amount, ctx.from.id, note);
   const kb = new InlineKeyboard().text("↩️ Bekor qilish", `undo:${debtor.id}:${payment.id}`);
-  await ctx.reply(`✅ <b>${esc(debtor.name)}</b> — ${fmt(amount, debtor.currency)} qabul qilindi\n\n${shortText(debtor)}`, { ...HTML, reply_markup: kb });
+  await ctx.reply(`✅ <b>${esc(debtor.name)}</b> — ${fmt(amount, debtor.currency)} qabul qilindi · 👤 <b>${esc(byName(ctx))}</b>\n\n${shortText(debtor)}`, { ...HTML, reply_markup: kb });
   if (String(debtor.tgId) !== String(ctx.from.id)) notifyCustomer(debtor, amount);
 }
 
@@ -309,17 +351,26 @@ bot.on("callback_query:data", async (ctx) => {
       const cl = await takeClaim(a);
       if (!cl) return ctx.answerCallbackQuery({ text: "Bu to'lov allaqachon qabul qilingan yoki muddati o'tgan.", show_alert: true });
       const { debtor, payment } = await addPayment(cl.id, cl.amount, ctx.from.id, "Mijoz kartaga o'tkazdi");
-      await ctx.editMessageText(`✅ <b>${esc(debtor.name)}</b> — ${fmt(payment.amount, debtor.currency)} qabul qilindi\n\n${shortText(debtor)}`,
+      await ctx.editMessageText(`✅ <b>${esc(debtor.name)}</b> — ${fmt(payment.amount, debtor.currency)} qabul qilindi · 👤 <b>${esc(byName(ctx))}</b>\n\n${shortText(debtor)}`,
         { ...HTML, reply_markup: new InlineKeyboard().text("↩️ Bekor qilish", `undo:${debtor.id}:${payment.id}`) });
       notifyCustomer(debtor, payment.amount);
       return ctx.answerCallbackQuery();
     }
+    if (act === "card" || act === "link") {
+      const d = await getDebtor(a);
+      if (!d) return ctx.answerCallbackQuery({ text: "Mijoz topilmadi.", show_alert: true });
+      await ctx.reply(act === "card" ? cardText(d, { owner: true })
+        : `${esc(d.name)} uchun havola:\n${inviteLink(ctx, d)}\n\n${d.tgId ? "✅ Ulangan" : "⏳ Hali ulanmagan"}`, HTML);
+      return ctx.answerCallbackQuery();
+    }
     if (act === "undo") {
       const d = await undoPayment(a, b);
-      await ctx.editMessageText(`↩️ To'lov bekor qilindi.\n\n${shortText(d)}`, HTML);
+      await addHistory(d.id, ctx.from.id, "To'lov bekor qilindi (botda)");
+      await ctx.editMessageText(`↩️ To'lov bekor qilindi · 👤 <b>${esc(byName(ctx))}</b>\n\n${shortText(d)}`, HTML);
     } else if (act === "del") {
+      const gone = await getDebtor(a);
       await deleteDebtor(a);
-      await ctx.editMessageText("🗑 O'chirildi.");
+      await ctx.editMessageText(`🗑 <b>${esc(gone?.name ?? "Mijoz")}</b> o'chirildi · 👤 <b>${esc(byName(ctx))}</b>`, HTML);
     } else if (act === "cancel") await ctx.editMessageText("Bekor qilindi.");
     await ctx.answerCallbackQuery();
   } catch (e) {
