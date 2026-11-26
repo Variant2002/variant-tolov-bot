@@ -142,8 +142,6 @@
     box-shadow: 0 6px 16px rgba(4,120,87,.35); }
   .btn.sec { background: var(--card); color: var(--text); font-weight: 500; margin-top: 8px; box-shadow: none; }
   .btn.danger { color: var(--red); }
-  details.more { margin-top: 12px; }
-  details.more summary { color: var(--btn); font-size: 14px; cursor: pointer; padding: 6px 0; }
   .info { margin-top: 10px; background: var(--card); border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.5; }
   .info:empty { display: none; }
   .chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
@@ -590,21 +588,19 @@ function showAdd() {
   sheet(`
     <div class="head"><h2>Yangi mijoz</h2><button class="x" data-act="close">✕</button></div>
     <label>Mijoz ismi</label><input id="aName" maxlength="60" placeholder="Mijozning ismi">
+    <div class="two"><div><label>Telefon</label><input id="aPhone" type="tel" placeholder="Telefon raqami"></div>
+      <div><label>ID (ixtiyoriy)</label><input id="aCode" maxlength="30" placeholder="ID raqami"></div></div>
     <label>Mahsulot</label><input id="aProduct" maxlength="80" placeholder="Masalan: iPhone 15">
     <div class="two"><div><label>Xarid narxi</label><input id="aBuy" type="text" inputmode="decimal" autocomplete="off" placeholder="12 mln ham bo'ladi"></div>
       <div><label>Oldindan to'lov</label><input id="aDown" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></div></div>
     <div class="two"><div><label>Foiz % (qolganiga)</label><input id="aPct" type="text" inputmode="decimal" autocomplete="off" placeholder="Masalan: 30"></div>
       <div><label>Necha oyga</label><input id="aMonths" type="number" inputmode="numeric" min="1" max="120" placeholder="Masalan: 6"></div></div>
     <label>Sotuv narxi (jami)</label><input id="aTotal" type="text" inputmode="decimal" autocomplete="off" placeholder="Foiz bilan o'zi hisoblanadi">
-    <div class="two"><div><label>1-to'lov sanasi</label><input id="aFirst" type="date" value="${plusMonth(today())}"></div>
-      <div><label>Valyuta</label><select id="aCur"><option value="USD">Dollar ($)</option><option value="EUR">Yevro (€)</option><option value="TRY">Lira (₺)</option><option value="UZS">So'm</option></select></div></div>
-    <details class="more"><summary>➕ Qo'shimcha (telefon, ID, sana, izoh)</summary>
-      <div class="two"><div><label>Telefon</label><input id="aPhone" type="tel" placeholder="Telefon raqami"></div>
-        <div><label>ID (ixtiyoriy)</label><input id="aCode" maxlength="30" placeholder="ID raqami"></div></div>
-      <div class="two"><div><label>Sotilgan sana</label><input id="aSale" type="date" value="${today()}"></div>
-        <div><label>Aborot</label><select id="aPool"><option value="">— yo'q —</option><option value="T">T-aborot</option><option value="C">C-aborot</option></select></div></div>
-      <label>Izoh (faqat sizga ko'rinadi)</label><input id="aNote" maxlength="200" placeholder="Masalan: kafil — akasi">
-    </details>
+    <div class="two"><div><label>Sotilgan sana</label><input id="aSale" type="date" value="${today()}"></div>
+      <div><label>1-to'lov sanasi</label><input id="aFirst" type="date" value="${plusMonth(today())}"></div></div>
+    <div class="two"><div><label>Valyuta</label><select id="aCur"><option value="USD">Dollar ($)</option><option value="EUR">Yevro (€)</option><option value="TRY">Lira (₺)</option><option value="UZS">So'm</option></select></div>
+      <div><label>Aborot</label><select id="aPool"><option value="">— yo'q —</option><option value="T">T-aborot</option><option value="C">C-aborot</option></select></div></div>
+    <label>Izoh (faqat sizga ko'rinadi)</label><input id="aNote" maxlength="200" placeholder="Masalan: kafil — akasi">
     <div class="info" id="aInfo"></div>
     <button class="btn" data-act="add">Qo'shish</button>`);
 }
