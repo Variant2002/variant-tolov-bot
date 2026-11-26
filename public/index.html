@@ -595,8 +595,6 @@ function showAdd() {
       <div><label>Oldindan to'lov</label><input id="aDown" type="text" inputmode="decimal" autocomplete="off" placeholder="0"></div></div>
     <div class="two"><div><label>Foiz % (qolganiga)</label><input id="aPct" type="text" inputmode="decimal" autocomplete="off" placeholder="Masalan: 30"></div>
       <div><label>Necha oyga</label><input id="aMonths" type="number" inputmode="numeric" min="1" max="120" placeholder="Masalan: 6"></div></div>
-    <div class="chips">${[20, 25, 30, 40, 50].map((x) => `<button class="chip" data-pct="${x}">${x}%</button>`).join("")}</div>
-    <div class="chips">${[3, 6, 9, 12].map((x) => `<button class="chip" data-months="${x}">${x} oy</button>`).join("")}</div>
     <label>Sotuv narxi (jami)</label><input id="aTotal" type="text" inputmode="decimal" autocomplete="off" placeholder="Foiz bilan o'zi hisoblanadi">
     <div class="two"><div><label>1-to'lov sanasi</label><input id="aFirst" type="date" value="${plusMonth(today())}"></div>
       <div><label>Valyuta</label><select id="aCur"><option value="USD">Dollar ($)</option><option value="EUR">Yevro (€)</option><option value="TRY">Lira (₺)</option><option value="UZS">So'm</option></select></div></div>
@@ -637,12 +635,6 @@ document.addEventListener("click", async (e) => {
   }
   if (t.classList.contains("card")) return showDetail(t.dataset.id);
   if (t.dataset.fill) return ($("payAmt").value = t.dataset.fill);
-  if (t.dataset.pct || t.dataset.months) {
-    const box = $(t.dataset.pct ? "aPct" : "aMonths");
-    box.value = t.dataset.pct || t.dataset.months;
-    if (t.dataset.pct) totalTouched = false;
-    return box.dispatchEvent(new Event("input", { bubbles: true }));
-  }
   if (t.dataset.preset) {
     const p = data.presets[Number(t.dataset.preset)], box = $("msgText") || $("tplText");
     const d = $("msgText") ? data.debtors.find((x) => x.id === openId) : null;
